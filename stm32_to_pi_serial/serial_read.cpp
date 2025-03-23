@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <vector>
 
-#define SERIAL_PORT "/dev/serial0"  // Update if using a different port
+#define SERIAL_PORT "/dev/serial0"  // Serial port on Raspberry Pi
 
 using Buffer = std::vector<uint8_t>;
 
@@ -14,7 +14,10 @@ enum class ReceiveDataPacketStatus {
     RECEIVING_DATA,
     TIME_OUT,
     ERROR        
-} receiveDataPacketState;
+};
+
+// Initialize the state to IDLE
+ReceiveDataPacketStatus receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
 
 void clearBuffer(int fd) {
     tcflush(fd, TCIFLUSH);  // Flush the input buffer
@@ -61,6 +64,7 @@ int openSerialPort(const char* portName) {
     return fd;
 }
 
+// Buffer settings
 #define BUFFER_SIZE 6
 Buffer buffer(BUFFER_SIZE, 0);
 int fd;
@@ -69,17 +73,20 @@ size_t idx = 0;
 #define START_MARKER '<'
 #define END_MARKER '>'
 
-void addCharToBuffer(int data) {
+// Function to safely add a character to the buffer
+void addCharToBuffer(uint8_t data) {
     if (idx >= BUFFER_SIZE) return;  // Prevent buffer overflow
     buffer[idx] = data;
     idx++;
 }
 
+// Function to reset the buffer
 void resetBuffer() {
     idx = 0;
     std::fill(buffer.begin(), buffer.end(), 0);
 }
 
+// Function to process received packet
 void processPacket() {
     printf("-> processPacket :: Value byte 0: '%u'\n", buffer[0]);
     printf("-> processPacket :: Value byte 1: '%u'\n", buffer[1]);
@@ -89,42 +96,40 @@ void processPacket() {
     printf("\n");
 }
 
+// Function to read and process incoming data packets
 void checkForDataPackets() {
-    int bytesRead = read(fd, buffer.data(), 1);  // Read into the buffer
+    uint8_t data;
+    int bytesRead = read(fd, &data, 1);  // Read a single byte
     if (bytesRead <= 0) return;  // If no data read, return
 
-   // printf("Received bytes: '%u'\n", buffer.size());  // Print each byte in decimal
+    printf("Received byte: '%u' (ASCII: '%c')\n", data, data);  // Debug output
 
-    for (int i = 0; i < bytesRead; i++) {
-        uint8_t data = buffer[0];  // Current byte from the buffer
+    switch (receiveDataPacketState) {
+        case ReceiveDataPacketStatus::IDLE:
+            if (data != START_MARKER) return;
+            resetBuffer();  // Reset buffer at start of new packet
+            addCharToBuffer(data);
+            receiveDataPacketState = ReceiveDataPacketStatus::RECEIVING_DATA;
+            break;
 
-        switch (receiveDataPacketState) {
-            case ReceiveDataPacketStatus::IDLE:
-                if (data != START_MARKER) return;
-                addCharToBuffer(data);
-                receiveDataPacketState = ReceiveDataPacketStatus::RECEIVING_DATA;
-                break;
+        case ReceiveDataPacketStatus::RECEIVING_DATA:
+            if ((data == '\n' || data == '\r') && idx == 0) return;  // Ignore newlines outside a message
+            addCharToBuffer(data);
 
-            case ReceiveDataPacketStatus::RECEIVING_DATA:
-                if ((data == '\n' || data == '\r') && idx == 0) return;  // Ignore newline/carriage return only outside a message
-                addCharToBuffer(data);
+            if (data == END_MARKER) {
+                processPacket();
+                resetBuffer();
+                receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
+            }
+            break;
 
-                if (data == END_MARKER) {
-                    processPacket();
-                    resetBuffer();
-                    receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
-                }
-                return;
-
-            case ReceiveDataPacketStatus::TIME_OUT:
-                break;
-
-            case ReceiveDataPacketStatus::ERROR:
-                break;
-        }
+        case ReceiveDataPacketStatus::TIME_OUT:
+        case ReceiveDataPacketStatus::ERROR:
+            break;
     }
 }
 
+// Main function
 int main() {
     fd = openSerialPort(SERIAL_PORT);
     if (fd == -1) {
@@ -135,7 +140,7 @@ int main() {
 
     while (1) {
         checkForDataPackets();
-        usleep(100);  // Sleep for .1ms to avoid excessive CPU usage
+        usleep(100);  // Sleep for 0.1ms to avoid excessive CPU usage
     }
 
     close(fd);
