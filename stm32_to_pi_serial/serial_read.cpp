@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
@@ -62,7 +61,8 @@ bool readSerialData(int fd) {
 
     // Check if the packet has the correct start and end markers
     if (buffer[0] != '<' || buffer[4] != '>') {
-        std::cerr << "Invalid packet: Incorrect start or end marker" << std::endl;
+        // Using printf instead of std::cerr
+        printf("Invalid packet: Incorrect start or end marker\n");
         return false;
     }
 
@@ -73,12 +73,13 @@ bool readSerialData(int fd) {
     // Verify checksum
     uint8_t checksumCalculated = calculateChecksum(value);
     if (checksumReceived != checksumCalculated) {
-        std::cerr << "Checksum error" << std::endl;
+        // Using printf instead of std::cerr
+        printf("Checksum error\n");
         return false;
     }
 
     // Successfully parsed packet
-    std::cout << "Received Value: " << value << std::endl;
+    printf("Received Value: %u\n", value);  // Use printf instead of std::cout
     return true;
 }
 
@@ -96,7 +97,8 @@ int main() {
 
     while (true) {
         if (!readSerialData(fd)) {
-            std::cerr << "Failed to read valid data" << std::endl;
+            // Using printf instead of std::cerr
+            printf("Failed to read valid data\n");
         }
         usleep(100000); // Sleep for 100ms (adjust as needed)
     }
