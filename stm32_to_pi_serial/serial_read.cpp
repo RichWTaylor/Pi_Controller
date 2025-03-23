@@ -6,8 +6,8 @@
 
 #define SERIAL_PORT "/dev/serial0"  // Update if using a different port
 
-void clearBuffer(int fd){
-    tcflush(fd,TCIFLUSH);
+void clearBuffer(int fd) {
+    tcflush(fd, TCIFLUSH);  // Flush the input buffer
 }
 
 // Function to open and configure the serial port
@@ -24,7 +24,6 @@ int openSerialPort(const char* portName) {
         close(fd);
         return -1;
     }
-
 
     clearBuffer(fd);
 
@@ -43,7 +42,7 @@ int openSerialPort(const char* portName) {
     options.c_iflag &= ~(IXON | IXOFF | IXANY);  // Disable software flow control
     options.c_oflag &= ~OPOST;  // Raw output
 
-    if (tcsetattr(fd, TCSANOW, &options)!= 0) {
+    if (tcsetattr(fd, TCSANOW, &options) != 0) {
         perror("Error applying serial settings");
         close(fd);
         return -1;
@@ -62,16 +61,18 @@ int main() {
 
     uint8_t buffer[2];  // Buffer for incoming data
     while (1) {
-        int bytesRead = read(fd, buffer, 2);
+        int bytesRead = read(fd, buffer, sizeof(buffer));  // Read up to 2 bytes
         if (bytesRead > 0) {
-            printf("%u", bytesRead);
-            //buffer[bytesRead] = '\0';  // Null-terminate for printing
-            
+            // Print each byte received
+            for (int i = 0; i < bytesRead; i++) {
+                printf("Received byte: 0x%02X\n", buffer[i]);
+            }
         } else if (bytesRead < 0) {
             perror("Error reading serial data");
             break;
         }
-        usleep(1000);  // Sleep for 100ms to avoid excessive CPU usage
+
+        usleep(1000);  // Sleep for 1ms to avoid excessive CPU usage
     }
 
     close(fd);
