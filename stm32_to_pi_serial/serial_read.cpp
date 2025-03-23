@@ -81,15 +81,22 @@ void resetBuffer() {
 }
 
 void processPacket() {
-    printf("->Received Value first byte: '%u'\n", buffer[0]);
+    printf("-> processPacket :: Value byte 0: '%u'\n", buffer[0]);
+    printf("-> processPacket :: Value byte 1: '%u'\n", buffer[1]);
+    printf("-> processPacket :: Value byte 2: '%u'\n", buffer[2]);
+    printf("-> processPacket :: Value byte 3: '%u'\n", buffer[3]);
+    printf("-> processPacket :: Value byte 4: '%u'\n", buffer[4]);
+    printf("\n");
 }
 
 void checkForDataPackets() {
-    int bytesRead = read(fd, buffer.data(), buffer.size());  // Read into the buffer
+    int bytesRead = read(fd, buffer.data(), 1);  // Read into the buffer
     if (bytesRead <= 0) return;  // If no data read, return
 
+   // printf("Received bytes: '%u'\n", buffer.size());  // Print each byte in decimal
+
     for (int i = 0; i < bytesRead; i++) {
-        uint8_t data = buffer[i];  // Current byte from the buffer
+        uint8_t data = buffer[0];  // Current byte from the buffer
 
         switch (receiveDataPacketState) {
             case ReceiveDataPacketStatus::IDLE:
@@ -115,8 +122,6 @@ void checkForDataPackets() {
             case ReceiveDataPacketStatus::ERROR:
                 break;
         }
-
-        printf("Received byte: '%u'\n", data);  // Print each byte in decimal
     }
 }
 
@@ -130,7 +135,7 @@ int main() {
 
     while (1) {
         checkForDataPackets();
-        usleep(1000);  // Sleep for 1ms to avoid excessive CPU usage
+        usleep(100);  // Sleep for .1ms to avoid excessive CPU usage
     }
 
     close(fd);
