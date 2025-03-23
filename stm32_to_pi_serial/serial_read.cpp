@@ -65,7 +65,8 @@ int main() {
         if (bytesRead > 0) {
             // Print each byte received
             for (int i = 0; i < bytesRead; i++) {
-                printf("Received byte: 0x%02X\n", buffer[i]);
+                //printf("Received byte: 0x%02X\n", buffer[i]);
+                printf("Received byte: '%u'\n", buffer[i]);
             }
         } else if (bytesRead < 0) {
             perror("Error reading serial data");
