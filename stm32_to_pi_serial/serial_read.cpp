@@ -6,6 +6,10 @@
 
 #define SERIAL_PORT "/dev/serial0"  // Update if using a different port
 
+void clearBuffer(int fd){
+    tcflush(fd,TCIFLUSH);
+}
+
 // Function to open and configure the serial port
 int openSerialPort(const char* portName) {
     int fd = open(portName, O_RDWR | O_NOCTTY);
@@ -20,6 +24,9 @@ int openSerialPort(const char* portName) {
         close(fd);
         return -1;
     }
+
+
+    clearBuffer(fd);
 
     // Configure baud rate
     cfsetispeed(&options, B115200);
@@ -36,7 +43,7 @@ int openSerialPort(const char* portName) {
     options.c_iflag &= ~(IXON | IXOFF | IXANY);  // Disable software flow control
     options.c_oflag &= ~OPOST;  // Raw output
 
-    if (tcsetattr(fd, TCSANOW, &options) != 0) {
+    if (tcsetattr(fd, TCSANOW, &options)!= 0) {
         perror("Error applying serial settings");
         close(fd);
         return -1;
@@ -53,17 +60,18 @@ int main() {
 
     printf("Listening on %s...\n", SERIAL_PORT);
 
-    uint8_t buffer[256];  // Buffer for incoming data
+    uint8_t buffer[2];  // Buffer for incoming data
     while (1) {
-        int bytesRead = read(fd, buffer, sizeof(buffer) - 1);
+        int bytesRead = read(fd, buffer, 2);
         if (bytesRead > 0) {
-            buffer[bytesRead] = '\0';  // Null-terminate for printing
-            printf("Received: %s\n", buffer);
+            printf("%u", bytesRead);
+            //buffer[bytesRead] = '\0';  // Null-terminate for printing
+            
         } else if (bytesRead < 0) {
             perror("Error reading serial data");
             break;
         }
-        usleep(100000);  // Sleep for 100ms to avoid excessive CPU usage
+        usleep(1000);  // Sleep for 100ms to avoid excessive CPU usage
     }
 
     close(fd);
