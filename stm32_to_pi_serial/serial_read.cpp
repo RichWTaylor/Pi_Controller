@@ -3,8 +3,18 @@
 #include <fcntl.h>
 #include <termios.h>
 #include <stdint.h>
+#include <vector>
 
 #define SERIAL_PORT "/dev/serial0"  // Update if using a different port
+
+using Buffer = std::vector<uint8_t>;
+
+enum class ReceiveDataPacketStatus {
+    IDLE,
+    RECEIVING_DATA,
+    TIME_OUT,
+    ERROR        
+} receiveDataPacketState;
 
 void clearBuffer(int fd) {
     tcflush(fd, TCIFLUSH);  // Flush the input buffer
@@ -51,28 +61,75 @@ int openSerialPort(const char* portName) {
     return fd;
 }
 
+#define BUFFER_SIZE 6
+Buffer buffer(BUFFER_SIZE, 0);
+int fd;
+size_t idx = 0;
+
+#define START_MARKER '<'
+#define END_MARKER '>'
+
+void addCharToBuffer(int data) {
+    if (idx >= BUFFER_SIZE) return;  // Prevent buffer overflow
+    buffer[idx] = data;
+    idx++;
+}
+
+void resetBuffer() {
+    idx = 0;
+    std::fill(buffer.begin(), buffer.end(), 0);
+}
+
+void processPacket() {
+    printf("->Received Value first byte: '%u'\n", buffer[0]);
+}
+
+void checkForDataPackets() {
+    int bytesRead = read(fd, buffer.data(), buffer.size());  // Read into the buffer
+    if (bytesRead <= 0) return;  // If no data read, return
+
+    for (int i = 0; i < bytesRead; i++) {
+        uint8_t data = buffer[i];  // Current byte from the buffer
+
+        switch (receiveDataPacketState) {
+            case ReceiveDataPacketStatus::IDLE:
+                if (data != START_MARKER) return;
+                addCharToBuffer(data);
+                receiveDataPacketState = ReceiveDataPacketStatus::RECEIVING_DATA;
+                break;
+
+            case ReceiveDataPacketStatus::RECEIVING_DATA:
+                if ((data == '\n' || data == '\r') && idx == 0) return;  // Ignore newline/carriage return only outside a message
+                addCharToBuffer(data);
+
+                if (data == END_MARKER) {
+                    processPacket();
+                    resetBuffer();
+                    receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
+                }
+                return;
+
+            case ReceiveDataPacketStatus::TIME_OUT:
+                break;
+
+            case ReceiveDataPacketStatus::ERROR:
+                break;
+        }
+
+        printf("Received byte: '%u'\n", data);  // Print each byte in decimal
+    }
+}
+
 int main() {
-    int fd = openSerialPort(SERIAL_PORT);
+    fd = openSerialPort(SERIAL_PORT);
     if (fd == -1) {
         return 1;
     }
 
     printf("Listening on %s...\n", SERIAL_PORT);
 
-    uint8_t buffer[2];  // Buffer for incoming data
     while (1) {
-        int bytesRead = read(fd, buffer, sizeof(buffer));  // Read up to 2 bytes
-        if (bytesRead > 0) {
-            // Print each byte received
-            for (int i = 0; i < bytesRead; i++) {
-                //printf("Received byte: 0x%02X\n", buffer[i]);
-                printf("Received byte: '%u'\n", buffer[i]);
-            }
-        } else if (bytesRead < 0) {
-            perror("Error reading serial data");
-            break;
-        }
-
+        checkForDataPackets();
         usleep(1000);  // Sleep for 1ms to avoid excessive CPU usage
     }
 
