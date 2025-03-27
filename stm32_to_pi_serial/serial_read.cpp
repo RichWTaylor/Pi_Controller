@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <stdint.h>
 #include <vector>
+#include <cstring>
 
 #define SERIAL_PORT "/dev/serial0"  // Serial port on Raspberry Pi
 
@@ -87,21 +88,23 @@ void resetBuffer() {
 }
 
 // Function to process received packet
-void processPacket_All() {
-    printf("-> processPacket :: Value byte 0: '%u'\n", buffer[0]);
-    printf("-> processPacket :: Value byte 1: '%u'\n", buffer[1]);
-    printf("-> processPacket :: Value byte 2: '%u'\n", buffer[2]);
-    printf("-> processPacket :: Value byte 3: '%u'\n", buffer[3]);
-    printf("-> processPacket :: Value byte 4: '%u'\n", buffer[4]);
-    printf("\n");
-}
-
-// Function to process received packet
 void processPacket() {
-    uint16_t val = (buffer[2] << 8) | buffer[1];
 
-    printf("-> processPacket :: uint16_t Value: '%u'\n", val);
-    //printf("\n");
+    uint32_t val =  (uint8_t)(buffer[1] << 24) |
+                    (uint8_t)(buffer[2] << 16) |
+                    (uint8_t)(buffer[3] << 8) |
+                    (uint8_t)(buffer[4]); 
+    float fVal=-1;
+    std::memcpy(&fVal, &val, sizeof(fVal));
+
+    printf("-> processPacket :: Value byte 0 (start marker): '%u'\n", buffer[0]);
+    printf("-> processPacket :: Value byte 1 (msb): '%u'\n", buffer[1]);
+    printf("-> processPacket :: Value byte 2      : '%u'\n", buffer[2]);
+    printf("-> processPacket :: Value byte 3      : '%u'\n", buffer[3]);
+    printf("-> processPacket :: Value byte 4 (lsb): '%u'\n", buffer[4]);
+    printf("-> processPacket :: Value byte 5 (chksm): '%u'\n", buffer[5]);
+    printf("-> processPacket :: Value byte 6 (end marker): '%u'\n", buffer[6]); 
+    printf("-> processPacket :: float Value: %f\n", fVal);
 }
 
 // Function to read and process incoming data packets
