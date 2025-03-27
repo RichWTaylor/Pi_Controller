@@ -90,16 +90,20 @@ void resetBuffer() {
 // Function to process received packet
 void processPacket() {
     float fVal = -1;
-    std::memcpy(&fVal, &buffer[1], sizeof(fVal));  // Directly copy bytes into float
+    uint8_t reorder[4] = {buffer[4], buffer[3], buffer[2], buffer[1]}; // reorder to big-endian (Msb to lsb)
 
+    std::memcpy(&fVal, reorder, sizeof(fVal));  // Directly copy bytes into float
+
+    /*
     printf("-> processPacket :: Value byte 0 (start marker): '%u'\n", buffer[0]);
-    printf("-> processPacket :: Value byte 1 (msb): '%u'\n", buffer[1]);
+    printf("-> processPacket :: Value byte 1 (lsb): '%u'\n", buffer[1]);
     printf("-> processPacket :: Value byte 2      : '%u'\n", buffer[2]);
     printf("-> processPacket :: Value byte 3      : '%u'\n", buffer[3]);
-    printf("-> processPacket :: Value byte 4 (lsb): '%u'\n", buffer[4]);
+    printf("-> processPacket :: Value byte 4 (msb): '%u'\n", buffer[4]);
     printf("-> processPacket :: Value byte 5 (chksm): '%u'\n", buffer[5]);
     printf("-> processPacket :: Value byte 6 (end marker): '%u'\n", buffer[6]); 
-    printf("-> processPacket :: float Value: %f\n", fVal);
+    */
+    printf("-> processPacket :: float Value: %10.2f\n", fVal);
 }
 
 
