@@ -89,13 +89,8 @@ void resetBuffer() {
 
 // Function to process received packet
 void processPacket() {
-
-    uint32_t val =  (uint8_t)(buffer[1] << 24) |
-                    (uint8_t)(buffer[2] << 16) |
-                    (uint8_t)(buffer[3] << 8) |
-                    (uint8_t)(buffer[4]); 
-    float fVal=-1;
-    std::memcpy(&fVal, &val, sizeof(fVal));
+    float fVal = -1;
+    std::memcpy(&fVal, &buffer[1], sizeof(fVal));  // Directly copy bytes into float
 
     printf("-> processPacket :: Value byte 0 (start marker): '%u'\n", buffer[0]);
     printf("-> processPacket :: Value byte 1 (msb): '%u'\n", buffer[1]);
@@ -106,6 +101,7 @@ void processPacket() {
     printf("-> processPacket :: Value byte 6 (end marker): '%u'\n", buffer[6]); 
     printf("-> processPacket :: float Value: %f\n", fVal);
 }
+
 
 // Function to read and process incoming data packets
 void checkForDataPackets() {
