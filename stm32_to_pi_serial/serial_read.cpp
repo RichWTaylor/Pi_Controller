@@ -65,7 +65,7 @@ int openSerialPort(const char* portName) {
 }
 
 // Buffer settings
-#define BUFFER_SIZE 6
+#define BUFFER_SIZE 7
 Buffer buffer(BUFFER_SIZE, 0);
 int fd;
 size_t idx = 0;
@@ -87,7 +87,7 @@ void resetBuffer() {
 }
 
 // Function to process received packet
-void processPacket() {
+void processPacket_All() {
     printf("-> processPacket :: Value byte 0: '%u'\n", buffer[0]);
     printf("-> processPacket :: Value byte 1: '%u'\n", buffer[1]);
     printf("-> processPacket :: Value byte 2: '%u'\n", buffer[2]);
@@ -96,13 +96,21 @@ void processPacket() {
     printf("\n");
 }
 
+// Function to process received packet
+void processPacket() {
+    uint16_t val = (buffer[2] << 8) | buffer[1];
+
+    printf("-> processPacket :: uint16_t Value: '%u'\n", val);
+    //printf("\n");
+}
+
 // Function to read and process incoming data packets
 void checkForDataPackets() {
     uint8_t data;
     int bytesRead = read(fd, &data, 1);  // Read a single byte
     if (bytesRead <= 0) return;  // If no data read, return
 
-    printf("Received byte: '%u' (ASCII: '%c')\n", data, data);  // Debug output
+    //printf("Received byte: '%u' (ASCII: '%c')\n", data, data);  // Debug output
 
     switch (receiveDataPacketState) {
         case ReceiveDataPacketStatus::IDLE:
