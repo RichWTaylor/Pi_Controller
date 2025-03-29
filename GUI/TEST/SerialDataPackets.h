@@ -21,6 +21,16 @@ private:
     char startMarker = '<';
     char endMarker = '>';
 
+    // Circular buffer size
+    static const int BUFFER_SIZE = 128;
+    QByteArray circularBuffer;
+    int bufferHead = 0;
+    int bufferTail = 0;
+
+    // Helper methods for circular buffer
+    void pushToCircularBuffer(uint8_t data);
+    QByteArray readFromCircularBuffer();
+
     void handleIncomingData(const QByteArray &data);
     void parseBuffer();
 };
