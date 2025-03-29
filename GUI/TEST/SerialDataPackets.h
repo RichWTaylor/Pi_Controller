@@ -2,40 +2,45 @@
 #define SERIALDATAPACKETS_H
 
 #include <QObject>
-#include "SerialHandler.h"
+#include <QByteArray>
+#include <QSerialPort>
+#include <QReadWriteLock>
 
 class SerialDataPackets : public QObject
 {
     Q_OBJECT
 public:
     explicit SerialDataPackets(QObject *parent = nullptr);
-    ~SerialDataPackets();  // Destructor declaration
+    ~SerialDataPackets();
 
     void start(const QString &portName);
-    void stop();
+    void stop();  // Stop the serial reading thread
     void setMarkers(char start, char end);
+    void cleanup();  // Cleanup resources and stop thread
+
+    // Method to get the latest value (read-only, thread-safe)
+    float getLatestValue() const;
 
 signals:
     void packetReceived(float value);
-    void errorOccurred(const QString &error);
+    void errorOccurred(const QString &errorMessage);
+
+public slots:
+    void handleIncomingData(const QByteArray &data);
+    void parseBuffer();
 
 private:
-    static constexpr int BUFFER_SIZE = 1024;
-    uint8_t circularBuffer[BUFFER_SIZE];
-    int head = 0;
-    int tail = 0;
-
-    char startMarker = '<';
-    char endMarker = '>';
-
-    SerialHandler serialHandler;
-
     void pushToCircularBuffer(uint8_t data);
-    bool popFromCircularBuffer(uint8_t &data);
-    bool isCircularBufferEmpty() const;
-    int circularBufferCount() const;
-    void parseBuffer();
-    void handleIncomingData(const QByteArray &data);
+    QByteArray readFromCircularBuffer();
+
+    QSerialPort serialHandler;
+    QByteArray circularBuffer;
+    char startMarker;
+    char endMarker;
+
+    static constexpr int BUFFER_SIZE = 1024;
+    mutable QReadWriteLock valueLock;  // Protect the latest value
+    float latestValue;  // Store the latest parsed value
 };
 
 #endif // SERIALDATAPACKETS_H

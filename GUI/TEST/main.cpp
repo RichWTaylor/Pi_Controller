@@ -16,20 +16,30 @@ int main(int argc, char *argv[])
     QQmlApplicationEngine engine;
     engine.rootContext()->setContextProperty("umsdk", &umsdk);
 
-    // Create SerialDataPackets directly in the main thread
-    SerialDataPackets serialPackets;
-    serialPackets.setMarkers('<', '>');
+    // Create SerialDataPackets in a separate thread
+    QThread *serialThread = new QThread();  
+    SerialDataPackets *serialPackets = new SerialDataPackets();
 
-    //serialPackets.start("/dev/serial0");  // Change this to your actual serial port
+    // Move the serialPackets object to the new thread
+    serialPackets->moveToThread(serialThread);
 
-    // Close serial port on app exit
-    QObject::connect(&app, &QCoreApplication::aboutToQuit, [&serialPackets]() {
-        qDebug() << "Closing serial port...";
-        serialPackets.stop();
+    // When the thread starts, initialize serial communication
+    QObject::connect(serialThread, &QThread::started, [serialPackets]() {
+        serialPackets->setMarkers('<', '>');
+        serialPackets->start("/dev/serial0");  // Change to your actual serial port
     });
 
-    // Connect received data to a QML-accessible signal (optional)
-    QObject::connect(&serialPackets, &SerialDataPackets::packetReceived, [](float value) {
+    // Clean up when the application quits
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, [serialThread, serialPackets]() {
+        serialPackets->cleanup();  // Stop serial communication and clean up
+        serialThread->quit();
+        serialThread->wait();  // Ensure the thread finishes before continuing
+        delete serialPackets;
+        delete serialThread;
+    });
+
+    // Connect received data to a QML-accessible signal
+    QObject::connect(serialPackets, &SerialDataPackets::packetReceived, [](float value) {
         qDebug() << "Received packet value:" << value;
     });
 
@@ -41,6 +51,9 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
 
     engine.load(url);
+
+    // Start the serial thread
+    serialThread->start();
 
     return app.exec();
 }
