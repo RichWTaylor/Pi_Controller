@@ -2,41 +2,45 @@
 
 SerialHandler::SerialHandler(QObject *parent) : QObject(parent) {
     connect(&serial, &QSerialPort::readyRead, this, &SerialHandler::handleReadyRead);
-    connect(&serial, &QSerialPort::errorOccurred, this, [this](QSerialPort::SerialPortError error) {
-        if (error != QSerialPort::NoError)
-            emit errorOccurred(serial.errorString());
-    });
+    connect(&serial, &QSerialPort::errorOccurred, this, &SerialHandler::handleError);
 }
 
-SerialHandler::~SerialHandler() {
-    close();
-}
+bool SerialHandler::open(const QString &portName, int baudRate) {
+    if (serial.isOpen()) serial.close();
 
-bool SerialHandler::open(const QString &portName, qint32 baudRate) {
     serial.setPortName(portName);
     serial.setBaudRate(baudRate);
     serial.setDataBits(QSerialPort::Data8);
     serial.setParity(QSerialPort::NoParity);
     serial.setStopBits(QSerialPort::OneStop);
     serial.setFlowControl(QSerialPort::NoFlowControl);
-    return serial.open(QIODevice::ReadWrite);
+
+    if (!serial.open(QIODevice::ReadWrite)) {
+        emit errorOccurred("Failed to open port: " + serial.errorString());
+        return false;
+    }
+    return true;
 }
 
 void SerialHandler::close() {
-    if (serial.isOpen())
+    if (serial.isOpen()) {
         serial.close();
+    }
 }
 
-bool SerialHandler::isOpen() const {
-    return serial.isOpen();
-}
-
-void SerialHandler::setDataCallback(const std::function<void(const QByteArray&)> &callback) {
-    dataCallback = callback;
+void SerialHandler::setDataCallback(std::function<void(const QByteArray &)> callback) {
+    dataCallback = std::move(callback);
 }
 
 void SerialHandler::handleReadyRead() {
-    QByteArray data = serial.readAll();
-    if (dataCallback)
+    if (dataCallback) {
+        QByteArray data = serial.readAll();
         dataCallback(data);
+    }
+}
+
+void SerialHandler::handleError(QSerialPort::SerialPortError error) {
+    if (error != QSerialPort::NoError) {
+        emit errorOccurred(serial.errorString());
+    }
 }

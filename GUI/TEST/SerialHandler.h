@@ -1,30 +1,30 @@
-#pragma once
+#ifndef SERIALHANDLER_H
+#define SERIALHANDLER_H
 
 #include <QObject>
 #include <QSerialPort>
-#include <QByteArray>
-#include <functional>
 
-class SerialHandler : public QObject {
+class SerialHandler : public QObject
+{
     Q_OBJECT
-
 public:
     explicit SerialHandler(QObject *parent = nullptr);
-    ~SerialHandler();
 
-    bool open(const QString &portName, qint32 baudRate = QSerialPort::Baud115200);
+    bool open(const QString &portName, int baudRate = 115200);
     void close();
-    bool isOpen() const;
 
-    void setDataCallback(const std::function<void(const QByteArray&)> &callback);
+    void setDataCallback(std::function<void(const QByteArray &)> callback);
 
 signals:
     void errorOccurred(const QString &error);
 
 private slots:
     void handleReadyRead();
+    void handleError(QSerialPort::SerialPortError error);
 
 private:
     QSerialPort serial;
-    std::function<void(const QByteArray&)> dataCallback;
+    std::function<void(const QByteArray &)> dataCallback;
 };
+
+#endif // SERIALHANDLER_H

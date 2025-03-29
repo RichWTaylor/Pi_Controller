@@ -10,10 +10,19 @@ SerialDataPackets::SerialDataPackets(QObject *parent) : QObject(parent) {
     });
 }
 
+SerialDataPackets::~SerialDataPackets() {
+   // stop();
+}
+
+
 void SerialDataPackets::start(const QString &portName) {
     if (!serialHandler.open(portName)) {
         emit errorOccurred("Failed to open serial port");
     }
+}
+
+void SerialDataPackets::stop() {
+    serialHandler.close();
 }
 
 void SerialDataPackets::setMarkers(char start, char end) {

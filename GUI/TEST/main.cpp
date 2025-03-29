@@ -19,7 +19,14 @@ int main(int argc, char *argv[])
     // Create SerialDataPackets directly in the main thread
     SerialDataPackets serialPackets;
     serialPackets.setMarkers('<', '>');
-    serialPackets.start("/dev/serial0");  // Change this to your actual serial port
+
+    //serialPackets.start("/dev/serial0");  // Change this to your actual serial port
+
+    // Close serial port on app exit
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, [&serialPackets]() {
+        qDebug() << "Closing serial port...";
+        serialPackets.stop();
+    });
 
     // Connect received data to a QML-accessible signal (optional)
     QObject::connect(&serialPackets, &SerialDataPackets::packetReceived, [](float value) {
