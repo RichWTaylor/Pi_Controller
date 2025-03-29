@@ -3,7 +3,7 @@
 #include <QQmlContext>
 #include <QThread>
 #include "umsdk_wrapper.h"
-#include "SerialDataPackets.hpp"
+#include "SerialDataPackets.h"
 
 int main(int argc, char *argv[])
 {

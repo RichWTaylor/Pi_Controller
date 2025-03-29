@@ -1,7 +1,7 @@
 #pragma once
 
 #include <QObject>
-#include "SerialHandler.hpp"
+#include "SerialHandler.h"
 
 class SerialDataPackets : public QObject {
     Q_OBJECT

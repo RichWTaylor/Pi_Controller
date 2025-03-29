@@ -1,4 +1,4 @@
-#include "SerialHandler.hpp"
+#include "SerialHandler.h"
 
 SerialHandler::SerialHandler(QObject *parent) : QObject(parent) {
     connect(&serial, &QSerialPort::readyRead, this, &SerialHandler::handleReadyRead);

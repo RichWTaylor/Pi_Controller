@@ -1,4 +1,4 @@
-#include "SerialDataPackets.hpp"
+#include "SerialDataPackets.h"
 #include <QDebug>
 
 SerialDataPackets::SerialDataPackets(QObject *parent) : QObject(parent) {
