@@ -1,3 +1,4 @@
+#include <QThread>  // Add this line to include the definition of QThread
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -17,7 +18,7 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("umsdk", &umsdk);
 
     // Create SerialDataPackets in a separate thread
-    QThread *serialThread = new QThread();  
+    QThread *serialThread = new QThread();
     SerialDataPackets *serialPackets = new SerialDataPackets();
 
     // Move the serialPackets object to the new thread
@@ -52,8 +53,8 @@ int main(int argc, char *argv[])
 
     engine.load(url);
 
-    // Start the serial thread
-    serialThread->start();
+    // Start the serial thread (this is redundant as it's started in the previous connect block)
+    // serialThread->start();  // Already triggered via QObject::connect
 
     return app.exec();
 }

@@ -1,46 +1,51 @@
 #include "SerialDataPackets.h"
 #include <QDebug>
-#include <QThread>
 
-SerialDataPackets::SerialDataPackets(QObject *parent) : QObject(parent), latestValue(0.0)
+SerialDataPackets::SerialDataPackets(QObject *parent)
+    : QObject(parent), startMarker('<'), endMarker('>'),latestValue(0.0)
 {
+    // Connect QSerialPort signals
     connect(&serialHandler, &QSerialPort::readyRead, this, &SerialDataPackets::handleIncomingData);
-    connect(&serialHandler, &QSerialPort::errorOccurred, this, &SerialDataPackets::errorOccurred);
+    connect(&serialHandler, &QSerialPort::errorOccurred, this, &SerialDataPackets::handleError);
 }
 
-SerialDataPackets::~SerialDataPackets() {
-    cleanup();  // Ensure cleanup is done when the object is deleted
+SerialDataPackets::~SerialDataPackets()
+{
+    cleanup();
 }
 
 void SerialDataPackets::start(const QString &portName)
 {
     serialHandler.setPortName(portName);
-    if (!serialHandler.open(QIODevice::ReadWrite)) {
-        emit errorOccurred("Failed to open serial port");
-        return;
-    }
     serialHandler.setBaudRate(QSerialPort::Baud115200);
     serialHandler.setDataBits(QSerialPort::Data8);
     serialHandler.setParity(QSerialPort::NoParity);
     serialHandler.setStopBits(QSerialPort::OneStop);
     serialHandler.setFlowControl(QSerialPort::NoFlowControl);
+
+    if (!serialHandler.open(QIODevice::ReadWrite)) {
+        emit errorOccurred(QSerialPort::UnknownError, "Failed to open the serial port.");
+    }
 }
 
-void SerialDataPackets::stop() {
+void SerialDataPackets::stop()
+{
     if (serialHandler.isOpen()) {
         serialHandler.close();
     }
 }
 
-void SerialDataPackets::setMarkers(char start, char end) {
+void SerialDataPackets::setMarkers(char start, char end)
+{
     startMarker = start;
     endMarker = end;
 }
 
-void SerialDataPackets::handleIncomingData(const QByteArray &data)
+void SerialDataPackets::handleIncomingData()
 {
-    for (int i = 0; i < data.size(); ++i) {
-        pushToCircularBuffer(data[i]);
+    QByteArray data = serialHandler.readAll();
+    for (char byte : data) {
+        pushToCircularBuffer(static_cast<uint8_t>(byte));
     }
     parseBuffer();
 }
@@ -54,15 +59,17 @@ void SerialDataPackets::parseBuffer()
         if (startIdx == -1 || endIdx == -1) break;
 
         QByteArray packet = circularBuffer.mid(startIdx, endIdx - startIdx + 1);
+
         if (packet.size() == 7) {
             float value;
-            uint8_t reorder[4] = {static_cast<uint8_t>(packet[4]),
-                                  static_cast<uint8_t>(packet[3]),
-                                  static_cast<uint8_t>(packet[2]),
-                                  static_cast<uint8_t>(packet[1])};
+            uint8_t reorder[4] = {
+                static_cast<uint8_t>(packet[4]),
+                static_cast<uint8_t>(packet[3]),
+                static_cast<uint8_t>(packet[2]),
+                static_cast<uint8_t>(packet[1])
+            };
             memcpy(&value, reorder, sizeof(float));
 
-            // Store the latest value thread-safely
             {
                 QWriteLocker locker(&valueLock);
                 latestValue = value;
@@ -71,35 +78,19 @@ void SerialDataPackets::parseBuffer()
             emit packetReceived(value);
         }
 
-        // Remove the processed packet from the circular buffer
-        for (int i = 0; i <= endIdx; ++i) {
-            readFromCircularBuffer();
-        }
+        // Remove processed packet
+        circularBuffer.remove(0, endIdx + 1);
     }
 }
 
 void SerialDataPackets::pushToCircularBuffer(uint8_t data)
 {
-    circularBuffer.append(data);
-
-    // If the buffer exceeds the max size, remove the oldest data (circular behavior)
+    circularBuffer.append(static_cast<char>(data));
     if (circularBuffer.size() > BUFFER_SIZE) {
         circularBuffer.remove(0, 1);
     }
 }
 
-QByteArray SerialDataPackets::readFromCircularBuffer()
-{
-    if (circularBuffer.isEmpty()) {
-        return QByteArray();
-    }
-
-    QByteArray result = circularBuffer.left(1);
-    circularBuffer.remove(0, 1);
-    return result;
-}
-
-// Read the latest value thread-safely
 float SerialDataPackets::getLatestValue() const
 {
     QReadLocker locker(&valueLock);
@@ -108,6 +99,34 @@ float SerialDataPackets::getLatestValue() const
 
 void SerialDataPackets::cleanup()
 {
-    stop();  // Close the serial port if open
-    // Any other cleanup operations can be done here
+    stop();
+}
+
+void SerialDataPackets::handleError(QSerialPort::SerialPortError error)
+{
+    QString errorMessage;
+    switch (error) {
+    case QSerialPort::NoError:
+        return;  // Ignore
+    case QSerialPort::DeviceNotFoundError:
+        errorMessage = "Device not found.";
+        break;
+    case QSerialPort::PermissionError:
+        errorMessage = "Permission error.";
+        break;
+    case QSerialPort::OpenError:
+        errorMessage = "Failed to open port.";
+        break;
+    case QSerialPort::ReadError:
+        errorMessage = "Read error.";
+        break;
+    case QSerialPort::WriteError:
+        errorMessage = "Write error.";
+        break;
+    default:
+        errorMessage = "Unknown error.";
+        break;
+    }
+
+    emit errorOccurred(error, errorMessage);
 }
