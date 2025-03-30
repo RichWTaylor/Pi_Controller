@@ -37,4 +37,11 @@ Window {
         y: 200
         onClicked: umsdk.moveFwd()  // Call moveDown() from the Umsdk_wrapper instance
     }
+
+    Text {
+        text: "Received Value: " + serialPackets.latestValue
+        x: 400
+        y: 250
+    }
+
 }

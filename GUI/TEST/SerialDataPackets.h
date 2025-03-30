@@ -5,10 +5,22 @@
 #include <QByteArray>
 #include <QSerialPort>
 #include <QReadWriteLock>
+#include <QThread>
 
 class SerialDataPackets : public QObject
 {
     Q_OBJECT
+    //Q_PROPERTY acts as a bridge between class variables and the Qt property system, 
+    //which includes signal-slot connections and QML bindings.
+
+    // Q_PROPERTY is used when you want to expose a a class member as a property to QML
+    Q_PROPERTY(float latestValue READ getLatestValue NOTIFY packetReceived) // Expose latestValue to QML
+    //Allows latestValue to be accessed in QML.
+    // Q_PROPERTY | Declares the property so QML and Qt can recognize it
+    // float latestValue | Property name and type
+    // READ | getLatestValue	Uses getLatestValue() as the getter function
+    // NOTIFY | packetReceived	Updates QML when packetReceived(float value) is emitted
+
 public:
     explicit SerialDataPackets(QObject *parent = nullptr);
     ~SerialDataPackets();
@@ -16,7 +28,7 @@ public:
     void start(const QString &portName);   // Open and start reading
     void stop();                           // Close serial port and stop reading
     void setMarkers(char start, char end); // Set start and end markers for packet parsing
-    void cleanup();                        // Called externally to stop and cleanup
+    void cleanup();                        // Stop serial & terminate thread
 
     float getLatestValue() const;          // Thread-safe getter for latest parsed value
 
@@ -33,6 +45,7 @@ private:
     void pushToCircularBuffer(uint8_t data);
     QByteArray readFromCircularBuffer();
 
+    QThread workerThread;   // Owns a worker thread
     QSerialPort serialHandler;
     QByteArray circularBuffer;
     char startMarker = '<';

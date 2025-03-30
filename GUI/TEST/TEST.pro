@@ -9,11 +9,13 @@ QMAKE_RPATHDIR += /home/labadmin/umsdk/build/bin/shared/
 SOURCES += \
         umsdk_wrapper.cpp \
         main.cpp \
+        SerialWorker.cpp \
         SerialHandler.cpp \
         SerialDataPackets.cpp
 
 HEADERS += \
         umsdk_wrapper.h \
+        SerialWorker.h \
         SerialHandler.h \
         SerialDataPackets.h
 
