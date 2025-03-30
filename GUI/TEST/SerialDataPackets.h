@@ -6,6 +6,7 @@
 #include <QSerialPort>
 #include <QReadWriteLock>
 #include <QThread>
+#include "SerialWorker.h"  // Include SerialWorker definition
 
 class SerialDataPackets : public QObject
 {
@@ -37,14 +38,15 @@ signals:
     void errorOccurred(QSerialPort::SerialPortError error, const QString &errorMessage);
 
 private slots:
-    void handleIncomingData();             // Called when new serial data is available
-    void parseBuffer();                    // Parse data in circular buffer
+    //void handleIncomingData();             // Called when new serial data is available
+    //void parseBuffer();                    // Parse data in circular buffer
     void handleError(QSerialPort::SerialPortError error); // Serial error handling
 
 private:
     void pushToCircularBuffer(uint8_t data);
     QByteArray readFromCircularBuffer();
 
+    SerialWorker *worker;  // Declare the worker pointer
     QThread workerThread;   // Owns a worker thread
     QSerialPort serialHandler;
     QByteArray circularBuffer;
