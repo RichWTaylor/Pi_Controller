@@ -35,3 +35,9 @@ void SerialDataPackets::cleanup()
 {
     stop();
 }
+
+float getLatestValue()
+{
+    return 0;
+}
+

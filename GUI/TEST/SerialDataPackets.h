@@ -40,7 +40,7 @@ signals:
 private slots:
     //void handleIncomingData();             // Called when new serial data is available
     //void parseBuffer();                    // Parse data in circular buffer
-    void handleError(QSerialPort::SerialPortError error); // Serial error handling
+    //void handleError(QSerialPort::SerialPortError error); // Serial error handling
 
 private:
     void pushToCircularBuffer(uint8_t data);
