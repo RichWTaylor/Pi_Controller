@@ -12,8 +12,11 @@ Window {
 
     Connections {
         target: serialPackets
-        onPacketReceived: receivedValue = value  // Update QML property
+        function onPacketReceived(value) {
+            receivedValue = value;
+        }
     }
+
 
     Button {
         text: "DOWN"
