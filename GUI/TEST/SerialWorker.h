@@ -6,7 +6,8 @@
 #include <QSerialPort>
 #include <QByteArray>
 #include <QReadWriteLock>
-
+#include <QDebug>
+#include <QThread>
 class SerialWorker : public QObject
 {
     Q_OBJECT

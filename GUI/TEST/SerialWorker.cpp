@@ -1,7 +1,6 @@
 // SerialWorker.cpp
 #include "SerialWorker.h"
-#include <QDebug>
-#include <QThread>
+
 
 SerialWorker::SerialWorker(QObject *parent)
     : QObject(parent),
