@@ -3,8 +3,7 @@
 #include <QThread>
 
 SerialDataPackets::SerialDataPackets(QObject *parent)
-    : QObject(parent),
-      latestValue(0.0)
+    : QObject(parent)
 {
     worker = new SerialWorker();  // Create the worker object
     worker->moveToThread(&workerThread);  // Move worker to worker thread
