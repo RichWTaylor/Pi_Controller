@@ -3,11 +3,16 @@
 #include <QQmlContext>
 #include "umsdk_wrapper.h"
 #include "SerialDataPackets.h"
+#include <QMetaType>
 
 int main(int argc, char *argv[]) {
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 #endif
+    // Register QSerialPort::SerialPortError type
+    qRegisterMetaType<QSerialPort::SerialPortError>("QSerialPort::SerialPortError");
+
+
     QGuiApplication app(argc, argv);
 
     Umsdk_wrapper umsdk;
