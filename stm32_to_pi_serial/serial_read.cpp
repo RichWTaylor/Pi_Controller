@@ -8,6 +8,8 @@
 
 #define SERIAL_PORT "/dev/serial0"  // Serial port on Raspberry Pi
 
+// sudo ln -s /dev/ttyAMA0 /dev/serial0
+
 using Buffer = std::vector<uint8_t>;
 
 enum class ReceiveDataPacketStatus {
@@ -147,7 +149,7 @@ int main() {
         return 1;
     }
 
-    printf("Listening on %s...\n", SERIAL_PORT);
+    printf("Listening on: %s...\n", SERIAL_PORT);
 
     while (1) {
         checkForDataPackets();

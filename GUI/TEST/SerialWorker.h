@@ -1,4 +1,3 @@
-// SerialWorker.h
 #ifndef SERIALWORKER_H
 #define SERIALWORKER_H
 
@@ -8,6 +7,8 @@
 #include <QReadWriteLock>
 #include <QDebug>
 #include <QThread>
+#include <cstring>
+
 class SerialWorker : public QObject
 {
     Q_OBJECT
@@ -24,18 +25,29 @@ signals:
     void errorOccurred(QSerialPort::SerialPortError error, const QString &errorMessage);
 
 private slots:
-    void handleIncomingData();  // Handles incoming data and parsing
+    void handleIncomingData();  // Handles incoming data byte-by-byte
     void handleError(QSerialPort::SerialPortError error); // Handles errors
 
 private:
-    void parseBuffer();  // Parses the buffer to extract packets
+    void processByte(uint8_t byte);  // Processes each byte received
+    void processPacket();  // Extracts and parses a full packet
 
     QSerialPort serialHandler;
-    QByteArray circularBuffer;
-    char startMarker = '<';
-    char endMarker = '>';
-    static constexpr int BUFFER_SIZE = 1024;
+    QByteArray buffer;
     mutable QReadWriteLock valueLock;
+
+    const char startMarker = '<';
+    const char endMarker = '>';
+    static constexpr int BUFFER_SIZE = 7;  // Matches C implementation
+
+    enum class ReceiveDataPacketStatus {
+        IDLE,
+        RECEIVING_DATA,
+        TIME_OUT,
+        ERROR
+    };
+
+    ReceiveDataPacketStatus receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
     float latestValue = 0.0f;
 };
 

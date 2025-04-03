@@ -1,11 +1,13 @@
 #include "SerialWorker.h"
 #include <QDebug>
+#include <cstring>
 
 SerialWorker::SerialWorker(QObject *parent)
     : QObject(parent),
       startMarker('<'),
       endMarker('>'),
-      latestValue(0.0)
+      latestValue(0.0),
+      receiveDataPacketState(ReceiveDataPacketStatus::IDLE)
 {
     qDebug() << "SerialWorker constructor called.";
     connect(&serialHandler, &QSerialPort::readyRead, this, &SerialWorker::handleIncomingData);
@@ -33,6 +35,12 @@ void SerialWorker::startReading(const QString &portName)
         emit errorOccurred(QSerialPort::UnknownError, "Failed to open the serial port.");
     } else {
         qDebug() << "Serial port opened successfully.";
+
+        // Flush any stale data
+        serialHandler.clear();
+        buffer.clear();
+        receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
+        qDebug() << "Serial buffer flushed.";
     }
 }
 
@@ -48,81 +56,101 @@ void SerialWorker::stopReading()
 void SerialWorker::handleIncomingData()
 {
     QByteArray data = serialHandler.readAll();
-    qDebug() << "Received raw data:" << data.toHex();
+    //qDebug() << "Received raw data:" << data.toHex();
 
     for (char byte : data) {
-        circularBuffer.append(byte);
-        if (circularBuffer.size() > BUFFER_SIZE) {
-            circularBuffer.remove(0, 1);
-        }
+        processByte(static_cast<uint8_t>(byte));
     }
-    parseBuffer();
 }
 
-void SerialWorker::parseBuffer()
+// Packet parsing logic similar to your C code
+void SerialWorker::processByte(uint8_t byte)
 {
-    while (true) {
-        int startIdx = circularBuffer.indexOf(startMarker);
-        int endIdx = circularBuffer.indexOf(endMarker, startIdx + 1);
-
-        if (startIdx == -1 || endIdx == -1) {
-            qDebug() << "No complete packet found in buffer.";
-            break;
-        }
-
-        QByteArray packet = circularBuffer.mid(startIdx, endIdx - startIdx + 1);
-        qDebug() << "Extracted packet:" << packet.toHex();
-
-        if (packet.size() == 7) {
-            float value;
-            uint8_t reorder[4] = {
-                static_cast<uint8_t>(packet[4]),
-                static_cast<uint8_t>(packet[3]),
-                static_cast<uint8_t>(packet[2]),
-                static_cast<uint8_t>(packet[1])
-            };
-            memcpy(&value, reorder, sizeof(float));
-
-            {
-                QWriteLocker locker(&valueLock);
-                latestValue = value;
+    switch (receiveDataPacketState) {
+        case ReceiveDataPacketStatus::IDLE:
+            if (byte == startMarker) {
+                buffer.clear();
+                buffer.append(byte);
+                receiveDataPacketState = ReceiveDataPacketStatus::RECEIVING_DATA;
+                qDebug() << " -> START MARKER OBSERVED";
             }
+            break;
 
-            qDebug() << "Decoded float value:" << value;
-            emit packetReceived(value);
-        } else {
-            qWarning() << "Invalid packet size:" << packet.size();
-        }
+        case ReceiveDataPacketStatus::RECEIVING_DATA:
+            buffer.append(byte);
 
-        // Remove processed packet
-        circularBuffer.remove(0, endIdx + 1);
+            if (byte == endMarker) {
+                qDebug() << " -> END MARKER OBSERVED";
+                if (buffer.size() == BUFFER_SIZE) {
+                    processPacket();
+                } else {
+                    qWarning() << "(!) Invalid packet size:" << buffer.size();
+                    latestValue = -1; // safety value
+                }
+                receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
+            }
+            break;
+
+        case ReceiveDataPacketStatus::TIME_OUT:
+        case ReceiveDataPacketStatus::ERROR:
+            qWarning() << "Unexpected state, resetting...";
+            receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
+            break;
     }
+}
+
+void SerialWorker::processPacket()
+{
+    if (buffer.size() != BUFFER_SIZE) {
+        qWarning() << "Corrupted packet ignored. Size:" << buffer.size();
+        return;
+    }
+
+    float fVal;
+    uint8_t reorder[4] = {
+        static_cast<uint8_t>(buffer[4]),
+        static_cast<uint8_t>(buffer[3]),
+        static_cast<uint8_t>(buffer[2]),
+        static_cast<uint8_t>(buffer[1])
+    };
+
+    std::memcpy(&fVal, reorder, sizeof(fVal));
+
+    {
+        QWriteLocker locker(&valueLock);
+        latestValue = fVal;
+    }
+
+    qDebug() << " |";
+    qDebug() << "  -> Decoded float value:" << fVal;
+    emit packetReceived(fVal);
 }
 
 void SerialWorker::handleError(QSerialPort::SerialPortError error)
 {
+    if (error == QSerialPort::NoError)
+        return;
+
     QString errorMessage;
     switch (error) {
-    case QSerialPort::NoError:
-        return;
-    case QSerialPort::DeviceNotFoundError:
-        errorMessage = "Device not found.";
-        break;
-    case QSerialPort::PermissionError:
-        errorMessage = "Permission error.";
-        break;
-    case QSerialPort::OpenError:
-        errorMessage = "Failed to open port.";
-        break;
-    case QSerialPort::ReadError:
-        errorMessage = "Read error.";
-        break;
-    case QSerialPort::WriteError:
-        errorMessage = "Write error.";
-        break;
-    default:
-        errorMessage = "Unknown error.";
-        break;
+        case QSerialPort::DeviceNotFoundError:
+            errorMessage = "Device not found.";
+            break;
+        case QSerialPort::PermissionError:
+            errorMessage = "Permission error.";
+            break;
+        case QSerialPort::OpenError:
+            errorMessage = "Failed to open port.";
+            break;
+        case QSerialPort::ReadError:
+            errorMessage = "Read error.";
+            break;
+        case QSerialPort::WriteError:
+            errorMessage = "Write error.";
+            break;
+        default:
+            errorMessage = "Unknown error.";
+            break;
     }
 
     qCritical() << "Serial error:" << errorMessage;

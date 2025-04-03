@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
 
     // Connect received data to QML (QML qDebug)
     QObject::connect(&serialPackets, &SerialDataPackets::packetReceived, [](float value) { // Lambda function to handle packet
-        qDebug() << "Received packet value:" << value;
+        qDebug() << "(main.cpp) Received packet value:" << value;
     });
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
