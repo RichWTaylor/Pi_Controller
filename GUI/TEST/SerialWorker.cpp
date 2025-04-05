@@ -10,9 +10,11 @@ SerialWorker::SerialWorker(QObject *parent)
       receiveDataPacketState(ReceiveDataPacketStatus::IDLE)
 {
     qDebug() << "SerialWorker constructor called.";
+    serialHandler.moveToThread(this->thread());  // Move serialHandler to the worker thread
     connect(&serialHandler, &QSerialPort::readyRead, this, &SerialWorker::handleIncomingData);
     connect(&serialHandler, &QSerialPort::errorOccurred, this, &SerialWorker::handleError);
 }
+
 
 SerialWorker::~SerialWorker()
 {
@@ -53,15 +55,18 @@ void SerialWorker::stopReading()
     }
 }
 
-void SerialWorker::handleIncomingData()
-{
+void SerialWorker::handleIncomingData() {
     QByteArray data = serialHandler.readAll();
-    //qDebug() << "Received raw data:" << data.toHex();
-
+    // Check for partial data and handle accordingly
     for (char byte : data) {
         processByte(static_cast<uint8_t>(byte));
     }
+
+    if (receiveDataPacketState == ReceiveDataPacketStatus::IDLE) {
+        buffer.clear();  // Clear the buffer if we are in IDLE state
+    }
 }
+
 
 // Packet parsing logic similar to your C code
 void SerialWorker::processByte(uint8_t byte)
@@ -76,9 +81,9 @@ void SerialWorker::processByte(uint8_t byte)
             }
             break;
 
-        case ReceiveDataPacketStatus::RECEIVING_DATA:
+            case ReceiveDataPacketStatus::RECEIVING_DATA:
             buffer.append(byte);
-
+        
             if (byte == endMarker) {
                 qDebug() << " -> END MARKER OBSERVED";
                 if (buffer.size() == BUFFER_SIZE) {
@@ -86,14 +91,17 @@ void SerialWorker::processByte(uint8_t byte)
                 } else {
                     qWarning() << "(!) Invalid packet size:" << buffer.size();
                     latestValue = -1; // safety value
+                    buffer.clear();  // Clear buffer to reset the state
+                    receiveDataPacketState = ReceiveDataPacketStatus::IDLE;  // Reset state
                 }
-                receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
             }
             break;
+        
 
         case ReceiveDataPacketStatus::TIME_OUT:
         case ReceiveDataPacketStatus::ERROR:
             qWarning() << "Unexpected state, resetting...";
+            buffer.clear();  // Clear the buffer to handle fragmented data correctly
             receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
             break;
     }
@@ -126,6 +134,16 @@ void SerialWorker::processPacket()
     emit packetReceived(fVal);
 }
 
+float SerialWorker::getLatestValue() const {
+    QReadLocker locker(&valueLock);  // Use read lock for thread-safe access
+    return latestValue;
+}
+/*
+Since you're not directly calling getLatestValue() in your main class and you're instead using the signal-slot mechanism to update the QML, 
+this is already a solid design. However, if you do need to retrieve the latest value programmatically (outside of the signal-slot mechanism), 
+calling getLatestValue() in SerialWorker from anywhere in the code (e.g., serialPackets->getLatestValue()) would be the way to go.
+*/
+
 void SerialWorker::handleError(QSerialPort::SerialPortError error)
 {
     if (error == QSerialPort::NoError)
@@ -154,5 +172,6 @@ void SerialWorker::handleError(QSerialPort::SerialPortError error)
     }
 
     qCritical() << "Serial error:" << errorMessage;
-    emit errorOccurred(error, errorMessage);
+    emit errorOccurred(error, errorMessage);  // Ensure correct connection type here
 }
+

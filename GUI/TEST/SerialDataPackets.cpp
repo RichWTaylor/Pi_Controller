@@ -40,9 +40,3 @@ void SerialDataPackets::cleanup()
     qDebug() << "Cleaning up SerialDataPackets...";
     stop();
 }
-
-float getLatestValue()
-{
-    qDebug() << "getLatestValue() called!";
-    return 0;
-}

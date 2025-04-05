@@ -18,7 +18,8 @@ public:
     ~SerialWorker();
 
     void startReading(const QString &portName);  // Starts the serial communication
-    void stopReading();                          // Stops the serial communication
+    void stopReading();                           // Stops the serial communication
+    float getLatestValue() const;  // Add this method to access latestValue safely
 
 signals:
     void packetReceived(float value);  // Emitted when a packet is parsed
@@ -35,6 +36,7 @@ private:
     QSerialPort serialHandler;
     QByteArray buffer;
     mutable QReadWriteLock valueLock;
+    QReadWriteLock valueLock;  // To protect latestValue
 
     const char startMarker = '<';
     const char endMarker = '>';
