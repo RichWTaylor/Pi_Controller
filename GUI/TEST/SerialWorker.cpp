@@ -115,6 +115,8 @@ void SerialWorker::checkAndProcessData()
     }
 }
 
+#include <QtCore/qmath.h>  // Make sure to include this for qIsNaN()
+
 void SerialWorker::processPacket()
 {
     if (messageBuffer.size() != MESSAGE_BUFFER_SIZE) {
@@ -122,29 +124,36 @@ void SerialWorker::processPacket()
         return;
     }
 
-    float fVal;
-    uint8_t reorder[4] = {
-        static_cast<uint8_t>(messageBuffer[4]),
-        static_cast<uint8_t>(messageBuffer[3]),
-        static_cast<uint8_t>(messageBuffer[2]),
-        static_cast<uint8_t>(messageBuffer[1])
-    };
+    // Check if the last byte is the end marker '>'
+    if (messageBuffer.at(messageBuffer.size() - 1) == endMarker) {
+        float fVal;
+        uint8_t reorder[4] = {
+            static_cast<uint8_t>(messageBuffer[4]),
+            static_cast<uint8_t>(messageBuffer[3]),
+            static_cast<uint8_t>(messageBuffer[2]),
+            static_cast<uint8_t>(messageBuffer[1])
+        };
 
-    std::memcpy(&fVal, reorder, sizeof(fVal));
+        std::memcpy(&fVal, reorder, sizeof(fVal));
 
-    if (std::isnan(fVal)) {
-        qWarning() << "Received NaN value — ignoring.";
-        return;
+        if (qIsNaN(fVal)) {  // Use qIsNaN() instead of std::isnan()
+            qWarning() << "Received NaN value — ignoring.";
+            return;
+        }
+
+        {
+            QWriteLocker locker(&valueLock);
+            latestValue = fVal;
+        }
+
+        qDebug() << "Decoded float value:" << fVal;
+        emit packetReceived(fVal);
+    } else {
+        qWarning() << "Invalid packet received, discarding message.";
+        messageBuffer.clear();
     }
-
-    {
-        QWriteLocker locker(&valueLock);
-        latestValue = fVal;
-    }
-
-    qDebug() << "Decoded float value:" << fVal;
-    emit packetReceived(fVal);
 }
+
 
 void SerialWorker::handleError(QSerialPort::SerialPortError error)
 {
