@@ -107,6 +107,8 @@ void SerialWorker::processByte(uint8_t byte)
     }
 }
 
+#include <cmath> // For std::isnan
+
 void SerialWorker::processPacket()
 {
     if (buffer.size() != BUFFER_SIZE) {
@@ -124,6 +126,11 @@ void SerialWorker::processPacket()
 
     std::memcpy(&fVal, reorder, sizeof(fVal));
 
+    if (std::isnan(fVal)) {
+        qWarning() << "(!) Received NaN value — ignoring.";
+        return;  // Skip NaNs entirely
+    }
+
     {
         QWriteLocker locker(&valueLock);
         latestValue = fVal;
@@ -133,6 +140,7 @@ void SerialWorker::processPacket()
     qDebug() << "  -> Decoded float value:" << fVal;
     emit packetReceived(fVal);
 }
+
 
 float SerialWorker::getLatestValue() const {
     QReadLocker locker(&valueLock);  // Use read lock for thread-safe access
