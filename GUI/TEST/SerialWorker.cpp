@@ -101,7 +101,8 @@ void SerialWorker::checkAndProcessData()
             holdingBuffer.remove(0, 1);  // Remove processed byte
 
             if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
-                if (messageBuffer.last() == endMarker) {
+                // Use 'at()' to access the last element of the QByteArray
+                if (messageBuffer.at(messageBuffer.size() - 1) == endMarker) {
                     processPacket();  // Valid packet
                 } else {
                     qWarning() << "Invalid packet received, discarding message.";
@@ -114,6 +115,7 @@ void SerialWorker::checkAndProcessData()
         }
     }
 }
+
 
 #include <QtCore/qmath.h>  // Make sure to include this for qIsNaN()
 
