@@ -130,10 +130,15 @@ void checkForDataPackets() {
             addCharToBuffer(data);
 
             if (data == END_MARKER) {
-                processPacket();
+                if (idx == BUFFER_SIZE) {
+                    processPacket();
+                } else {
+                    printf("(!) Invalid packet size: %zu bytes\n", idx);
+                }
                 resetBuffer();
                 receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
             }
+            
             break;
 
         case ReceiveDataPacketStatus::TIME_OUT:
