@@ -30,17 +30,19 @@ private slots:
     void handleError(QSerialPort::SerialPortError error); // Handles errors
 
 private:
+    void checkAndProcessData();  // Processes data from the holding buffer and moves to message buffer
     void processByte(uint8_t byte);  // Processes each byte received
     void processPacket();  // Extracts and parses a full packet
 
     QSerialPort serialHandler;
-    QByteArray buffer;
+    QByteArray holdingBuffer;
+    QByteArray messageBuffer;
     mutable QReadWriteLock valueLock;
-   // QReadWriteLock valueLock;  // To protect latestValue
 
     const char startMarker = '<';
     const char endMarker = '>';
-    static constexpr int BUFFER_SIZE = 1024;  // Matches C implementation
+    static constexpr int HOLDING_BUFFER_SIZE = 1000;  // Size for the holding buffer
+    static constexpr int MESSAGE_BUFFER_SIZE = 7;  // Fixed size for message buffer
 
     enum class ReceiveDataPacketStatus {
         IDLE,
@@ -51,6 +53,8 @@ private:
 
     ReceiveDataPacketStatus receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
     float latestValue = 0.0f;
+
+    int holdingBufferIndex = 0; // Used for overwriting the oldest data in the holding buffer
 };
 
 #endif // SERIALWORKER_H
