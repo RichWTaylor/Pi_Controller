@@ -1,0 +1,605 @@
+
+16:30:18: Starting /home/labadmin/SensapexGUI/build-TEST-Desktop-Debug/TEST...
+QML debugging is enabled. Only use this in a safe environment.
+Starting application...
+Creating SerialDataPackets instance...
+SerialWorker constructor called.
+Initializing SerialDataPackets...
+Starting SerialDataPackets with port: "/dev/serial0"
+Opening serial port: "/dev/serial0"
+Serial port opened successfully.
+Serial buffer flushed.
+Application initialized successfully.
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 95.84
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 563.09
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3612.31
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 66
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2638.42
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 71
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3026.95
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 66
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 194.66
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 79
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1720.73
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 53
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3121.82
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 76
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2333.03
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 61
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 3
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 4043.55
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 81
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2575.53
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 57
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 570.21
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 84
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1462.34
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 65
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1607.19
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 80
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3099.32
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 62
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 140.63
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 76
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 609.54
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 56
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2485.27
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 73
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 3
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 593.77
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 66
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 95.84
+(main.cpp) Received packet value: 563.09
+(main.cpp) Received packet value: 3612.31
+(main.cpp) Received packet value: 2638.42
+(main.cpp) Received packet value: 3026.95
+(main.cpp) Received packet value: 194.66
+(main.cpp) Received packet value: 1720.73
+(main.cpp) Received packet value: 3121.82
+(main.cpp) Received packet value: 2333.03
+(main.cpp) Received packet value: 4043.55
+(main.cpp) Received packet value: 2575.53
+(main.cpp) Received packet value: 570.21
+(main.cpp) Received packet value: 1462.34
+(main.cpp) Received packet value: 1607.19
+(main.cpp) Received packet value: 3099.32
+(main.cpp) Received packet value: 140.63
+(main.cpp) Received packet value: 609.54
+(main.cpp) Received packet value: 2485.27
+(main.cpp) Received packet value: 593.77
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 168.53
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 76
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 133.58
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 3
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3071.11
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 79
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2466.94
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 50
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 638.2
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 87
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 153.53
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 168.53
+(main.cpp) Received packet value: 133.58
+(main.cpp) Received packet value: 3071.11
+(main.cpp) Received packet value: 2466.94
+(main.cpp) Received packet value: 638.2
+(main.cpp) Received packet value: 153.53
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 63
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3064.44
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+(main.cpp) Received packet value: 3064.44
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 80
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1612.74
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 65
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1563.06
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 85
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 613.06
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 63
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2558.11
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 1612.74
+(main.cpp) Received packet value: 1563.06
+(main.cpp) Received packet value: 613.06
+(main.cpp) Received packet value: 2558.11
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 68
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 736.36
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+(main.cpp) Received packet value: 736.36
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 56
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2366.83
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 83
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 4
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3090.45
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 63
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1730.41
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 2366.83
+(main.cpp) Received packet value: 3090.45
+(main.cpp) Received packet value: 1730.41
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 78
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 209.61
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 209.61
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 60
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2975.48
+(main.cpp) Received packet value: 2975.48
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 84
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2344.78
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 2344.78
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 64
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 820.49
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 820.49
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 70
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 95.6
+(main.cpp) Received packet value: 95.6
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 59
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3128.31
+(main.cpp) Received packet value: 3128.31
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 84
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2986.87
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+(main.cpp) Received packet value: 2986.87
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 67
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 245.57
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 245.57
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 80
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 457.92
+(main.cpp) Received packet value: 457.92
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 63
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2721.19
+(main.cpp) Received packet value: 2721.19
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 60
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2366.83
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 83
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 4
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3090.45
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 63
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1730.41
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 46
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 613.06
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 63
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2558.11
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 67
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 153.53
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 40
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1720.73
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 53
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3121.82
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 76
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2333.03
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 61
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 3
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 4043.55
+(main.cpp) Received packet value: 2366.83
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 81
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2575.53
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 57
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 570.21
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 84
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1462.34
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 65
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 1607.19
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 80
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 3099.32
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 62
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 140.63
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 76
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 609.54
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 56
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 2485.27
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 14
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 73
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 3
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+ |
+  -> Decoded float value: 593.77
+(main.cpp) Received packet value: 3090.45
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 153
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 545
+ -> START MARKER OBSERVED
+ -> END MARKER OBSERVED
+(!) Invalid packet size: 545
+(main.cpp) Received packet value: 1730.41
+(main.cpp) Received packet value: 613.06
+ -> START MARKER OBSERVED
+(main.cpp) Received packet value: 2558.11
+(main.cpp) Received packet value: 153.53
+(main.cpp) Received packet value: 1720.73
+(main.cpp) Received packet value: 3121.82
+(main.cpp) Received packet value: 2333.03
+(main.cpp) Received packet value: 4043.55
+(main.cpp) Received packet value: 2575.53
+(main.cpp) Received packet value: 570.21
+(main.cpp) Received packet value: 1462.34
+(main.cpp) Received packet value: 1607.19
+(main.cpp) Received packet value: 3099.32
+(main.cpp) Received packet value: 140.63
+(main.cpp) Received packet value: 609.54
+(main.cpp) Received packet value: 2485.27
+(main.cpp) Received packet value: 593.77
+16:30:22: /home/labadmin/SensapexGUI/build-TEST-Desktop-Debug/TEST crashed.
