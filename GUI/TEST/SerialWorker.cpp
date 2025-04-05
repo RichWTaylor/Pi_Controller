@@ -64,7 +64,7 @@ void SerialWorker::handleIncomingData()
     if (data.isEmpty()) {
         qDebug() << "No data received.";
     } else {
-        qDebug() << "Data received:" << data.toHex();
+        //qDebug() << "Data received:" << data.toHex();
     }
 
     // Insert the received data into the holding buffer
@@ -98,6 +98,8 @@ void SerialWorker::checkAndProcessData()
             }
         } else if (receiveDataPacketState == ReceiveDataPacketStatus::RECEIVING_DATA) {
             messageBuffer.append(byte);
+            qDebug() << "append byte to messageBuffer: ";
+            qDebug() << byte;
             holdingBuffer.remove(0, 1);  // Remove processed byte
 
             if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
