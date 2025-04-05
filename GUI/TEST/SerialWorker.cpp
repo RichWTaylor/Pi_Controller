@@ -61,29 +61,37 @@ void SerialWorker::stopReading()
 void SerialWorker::handleIncomingData()
 {
     QByteArray data = serialHandler.readAll();
+
     if (data.isEmpty()) {
         qDebug() << "No data received.";
     } else {
         //qDebug() << "Data received:" << data.toHex();
-    }
 
-    // Insert the received data into the holding buffer
-    for (char byte : data) {
-        if (holdingBuffer.size() < HOLDING_BUFFER_SIZE) {
-            holdingBuffer.append(byte);
-        } else {
-            holdingBuffer[holdingBufferIndex] = byte;  // Overwrite the oldest data
-            qDebug() << "Holding buffer full, overwriting oldest byte.";
-            holdingBufferIndex = (holdingBufferIndex + 1) % HOLDING_BUFFER_SIZE;
+        // Insert the received data into the holding buffer
+        for (char byte : data) {
+            if (holdingBuffer.size() < HOLDING_BUFFER_SIZE) {
+                //qDebug() << "append";
+                holdingBuffer.append(byte);
+            } else {
+                holdingBuffer[holdingBufferIndex] = byte;  // Overwrite the oldest data
+                qDebug() << "Holding buffer full, overwriting oldest byte.";
+                holdingBufferIndex = (holdingBufferIndex + 1) % HOLDING_BUFFER_SIZE;
+            }
+            // Check the holding buffer and move data to the message buffer
+            checkAndProcessData();
         }
+
     }
 
-    // Check the holding buffer and move data to the message buffer
-    checkAndProcessData();
+
+
+
 }
 
 void SerialWorker::checkAndProcessData()
 {
+    //qDebug() << "checkAndProcessData()";
+
     while (!holdingBuffer.isEmpty()) {
         uint8_t byte = static_cast<uint8_t>(holdingBuffer[0]);
 
@@ -95,6 +103,9 @@ void SerialWorker::checkAndProcessData()
                 qDebug() << "Start marker observed, transitioning to RECEIVING_DATA state.";
             } else {
                 holdingBuffer.remove(0, 1);  // Discard byte if not a start marker in IDLE state
+                qDebug() << "byte: ";
+                qDebug() << byte;
+                qDebug() << "discarded";
             }
         } else if (receiveDataPacketState == ReceiveDataPacketStatus::RECEIVING_DATA) {
             messageBuffer.append(byte);
@@ -104,7 +115,8 @@ void SerialWorker::checkAndProcessData()
 
             if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
                 // Use 'at()' to access the last element of the QByteArray
-                if (messageBuffer.at(messageBuffer.size()-1) == endMarker) {
+                qDebug() << "check end marker:";
+                if (!messageBuffer.isEmpty() && messageBuffer.at(messageBuffer.size()-1) == endMarker) {
                     processPacket();  // Valid packet
                 } else {
                     qWarning() << "Invalid packet received, discarding message.";

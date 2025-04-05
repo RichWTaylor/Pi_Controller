@@ -41,8 +41,8 @@ private:
 
     const char startMarker = '<';
     const char endMarker = '>';
-    static constexpr int HOLDING_BUFFER_SIZE = 1024;  // Size for the holding buffer
-    static constexpr int MESSAGE_BUFFER_SIZE = 8;  // Fixed size for message buffer
+    static constexpr int HOLDING_BUFFER_SIZE = 102400;  // Size for the holding buffer
+    static constexpr int MESSAGE_BUFFER_SIZE = 7;  // Fixed size for message buffer
 
     enum class ReceiveDataPacketStatus {
         IDLE,
