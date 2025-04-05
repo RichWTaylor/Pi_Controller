@@ -36,11 +36,11 @@ private:
     QSerialPort serialHandler;
     QByteArray buffer;
     mutable QReadWriteLock valueLock;
-    QReadWriteLock valueLock;  // To protect latestValue
+   // QReadWriteLock valueLock;  // To protect latestValue
 
     const char startMarker = '<';
     const char endMarker = '>';
-    static constexpr int BUFFER_SIZE = 7;  // Matches C implementation
+    static constexpr int BUFFER_SIZE = 1024;  // Matches C implementation
 
     enum class ReceiveDataPacketStatus {
         IDLE,

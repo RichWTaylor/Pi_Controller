@@ -13,9 +13,14 @@ Window {
     Connections {
         target: serialPackets
         function onPacketReceived(value) {
-            receivedValue = value;
+            if (value !== value){
+                console.warn("Ignored NAN value");
+            } else {
+                receivedValue = value;
+            }
         }
     }
+
 
 
     Button {

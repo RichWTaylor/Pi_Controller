@@ -6,13 +6,14 @@ SerialWorker::SerialWorker(QObject *parent)
     : QObject(parent),
       startMarker('<'),
       endMarker('>'),
-      latestValue(0.0),
-      receiveDataPacketState(ReceiveDataPacketStatus::IDLE)
+      receiveDataPacketState(ReceiveDataPacketStatus::IDLE),
+      latestValue(0.0)
 {
     qDebug() << "SerialWorker constructor called.";
-    serialHandler.moveToThread(this->thread());  // Move serialHandler to the worker thread
+   // serialHandler.moveToThread(this->thread());  // Move serialHandler to the worker thread
     connect(&serialHandler, &QSerialPort::readyRead, this, &SerialWorker::handleIncomingData);
     connect(&serialHandler, &QSerialPort::errorOccurred, this, &SerialWorker::handleError);
+    buffer.reserve(100);
 }
 
 
@@ -57,15 +58,36 @@ void SerialWorker::stopReading()
 
 void SerialWorker::handleIncomingData() {
     QByteArray data = serialHandler.readAll();
+
+    // Log the size of the incoming data
+    qDebug() << "Received data size:" << data.size();
+    if (data.isEmpty()) {
+        qDebug() << "No data received.";
+    } else {
+        qDebug() << "Data received:" << data.toHex();
+    }
+
     // Check for partial data and handle accordingly
     for (char byte : data) {
+        // Log each byte being processed
+        qDebug() << "Processing byte:" << static_cast<uint8_t>(byte);
         processByte(static_cast<uint8_t>(byte));
     }
 
+    // Log the receive data packet state
+    qDebug() << "ReceiveDataPacketStatus:" << static_cast<int>(receiveDataPacketState);
+
+    // Handle buffer clear based on the state
     if (receiveDataPacketState == ReceiveDataPacketStatus::IDLE) {
+        qDebug() << "Clearing buffer as state is IDLE";
         buffer.clear();  // Clear the buffer if we are in IDLE state
     }
+
+    // Log the current buffer size and contents after processing
+    qDebug() << "Current buffer size:" << buffer.size();
+    qDebug() << "Current buffer contents:" << buffer.toHex();
 }
+
 
 
 // Packet parsing logic similar to your C code
@@ -124,7 +146,19 @@ void SerialWorker::processPacket()
         static_cast<uint8_t>(buffer[1])
     };
 
-    std::memcpy(&fVal, reorder, sizeof(fVal));
+    if (buffer.size() >= 5) {
+        uint8_t reorder[4] = {
+            static_cast<uint8_t>(buffer[4]),
+            static_cast<uint8_t>(buffer[3]),
+            static_cast<uint8_t>(buffer[2]),
+            static_cast<uint8_t>(buffer[1])
+        };
+        std::memcpy(&fVal, reorder, sizeof(fVal));
+    } else {
+        qWarning() << "Buffer too small for float decode!";
+        return;
+    }
+
 
     if (std::isnan(fVal)) {
         qWarning() << "(!) Received NaN value — ignoring.";
