@@ -104,7 +104,7 @@ void SerialWorker::checkAndProcessData()
 
             if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
                 // Use 'at()' to access the last element of the QByteArray
-                if (messageBuffer.at(messageBuffer.size()) == endMarker) {
+                if (messageBuffer.at(messageBuffer.size()-1) == endMarker) {
                     processPacket();  // Valid packet
                 } else {
                     qWarning() << "Invalid packet received, discarding message.";
