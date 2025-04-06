@@ -12,7 +12,7 @@ public:
     explicit pidController(QObject *parent = nullptr);
 
     // Dummy method for now to handle received packets
-    Q_SLOT void onPacketReceived(float value);
+    Q_SLOT void onPacketReceived(float value);  // Make sure this is a Q_SLOT
 
     // Expose UMSDK wrapper functions via helper methods
     Q_INVOKABLE void connectToDevice();
