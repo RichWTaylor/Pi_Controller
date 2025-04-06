@@ -11,6 +11,9 @@ class pidController : public QObject
 public:
     explicit pidController(QObject *parent = nullptr);
 
+    // Dummy method for now to handle received packets
+    Q_SLOT void onPacketReceived(float value);
+
     // Expose UMSDK wrapper functions via helper methods
     Q_INVOKABLE void connectToDevice();
     Q_INVOKABLE void startPIDControl();

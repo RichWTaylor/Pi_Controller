@@ -7,6 +7,13 @@ pidController::pidController(QObject *parent)
     // Initialize Umsdk_wrapper instance (it’s already initialized by its constructor)
 }
 
+void onPacketReceived(float value) {
+    // Dummy processing: just print the received value for now
+    qDebug() << "Packet received with value:" << value;
+
+    // Here you can implement actual PID control logic or pass the value to other parts of your controller
+}
+
 void pidController::connectToDevice()
 {
     umsdk.hello();  // Using the Umsdk_wrapper method to connect to the device
