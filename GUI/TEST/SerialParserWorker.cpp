@@ -22,7 +22,7 @@ SerialParserWorker::~SerialParserWorker() {
 void SerialParserWorker::startReading(const QString &portName)
 {
     connect(&serialPort, &QSerialPort::readyRead, this, &SerialParserWorker::handleReadyRead);
-    
+
     if (portName.isEmpty()) {
         emit errorOccurred(QSerialPort::UnknownError, "Port name is empty.");
         return;
@@ -36,6 +36,14 @@ void SerialParserWorker::startReading(const QString &portName)
 
     // Now open the port
     serialPort.setPortName(portName);
+
+    // Serial port configuration (you were missing this part in your code)
+    serialPort.setBaudRate(QSerialPort::Baud115200);     // Set the baud rate
+    serialPort.setDataBits(QSerialPort::Data8);          // Set data bits (8 bits per byte)
+    serialPort.setStopBits(QSerialPort::OneStop);        // Set 1 stop bit
+    serialPort.setParity(QSerialPort::NoParity);         // No parity bit
+    serialPort.setFlowControl(QSerialPort::NoFlowControl); // Disable flow control
+
     if (!serialPort.open(QIODevice::ReadWrite)) {
         emit errorOccurred(serialPort.error(), serialPort.errorString());
         return;
@@ -46,6 +54,7 @@ void SerialParserWorker::startReading(const QString &portName)
     // Connect the `readyRead` signal to `handleReadyRead` method
     connect(&serialPort, &QSerialPort::readyRead, this, &SerialParserWorker::handleReadyRead);
 }
+
 
 
 void SerialParserWorker::stop() {
@@ -66,7 +75,7 @@ void SerialParserWorker::handleReadyRead() {
 
     QByteArray data = serialPort.readAll();
 
-    qDebug() << "checkAndProcessData called";
+    qDebug() << "Received Data" << data.toHex();
 
     for (char byte : data) {
         if (holdingBuffer.size() < 1024) {
