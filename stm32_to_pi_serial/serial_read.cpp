@@ -96,7 +96,7 @@ void processPacket() {
 
     std::memcpy(&fVal, reorder, sizeof(fVal));  // Directly copy bytes into float
 
-    /*
+/*
     printf("-> processPacket :: Value byte 0 (start marker): '%u'\n", buffer[0]);
     printf("-> processPacket :: Value byte 1 (lsb): '%u'\n", buffer[1]);
     printf("-> processPacket :: Value byte 2      : '%u'\n", buffer[2]);
@@ -104,8 +104,9 @@ void processPacket() {
     printf("-> processPacket :: Value byte 4 (msb): '%u'\n", buffer[4]);
     printf("-> processPacket :: Value byte 5 (chksm): '%u'\n", buffer[5]);
     printf("-> processPacket :: Value byte 6 (end marker): '%u'\n", buffer[6]); 
-    */
+    
     printf("-> processPacket :: float Value: %10.2f\n", fVal);
+    */
 }
 
 
