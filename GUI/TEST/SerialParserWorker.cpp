@@ -42,6 +42,9 @@ void SerialParserWorker::startReading(const QString &portName)
     }
 
     qDebug() << "Serial port opened on" << portName;
+
+    // Connect the `readyRead` signal to `handleReadyRead` method
+    connect(&serialPort, &QSerialPort::readyRead, this, &SerialParserWorker::handleReadyRead);
 }
 
 
