@@ -11,15 +11,12 @@ Window {
     property real receivedValue: 0.0  // Holds latest received value
 
     Connections {
-        target: serialWorker  // changed from serialPackets
-        function onPacketReceived(value) {
-            if (value !== value) {
-                console.warn("Ignored NAN value");
-            } else {
-                receivedValue = value;
-            }
+        target: serialParserHandler
+        function onPacketReceived(packet) {
+            receivedValue = packet;  // Update the receivedValue with the new packet value
         }
     }
+
 
     Button {
         text: "DOWN"

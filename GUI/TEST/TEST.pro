@@ -1,15 +1,17 @@
-QT += quick serialport
+QT += core quick serialport
 
 INCLUDEPATH += /home/labadmin/umsdk/inc/
 LIBS += -L/home/labadmin/umsdk/build/bin/shared/ -lum
 QMAKE_RPATHDIR += /home/labadmin/umsdk/build/bin/shared/
 
 SOURCES += \
+    SerialParserHandler.cpp \
     umsdk_wrapper.cpp \
     main.cpp \
     SerialParserWorker.cpp
 
 HEADERS += \
+    SerialParserHandler.h \
     umsdk_wrapper.h \
     SerialParserWorker.h \
     SerialProtocol.h  # Include shared protocol file

@@ -11,39 +11,41 @@ SerialParserWorker::SerialParserWorker(QObject *parent)
       startMarker('<'),
       endMarker('>')
 {
-    connect(&serial, &QSerialPort::readyRead, this, &SerialParserWorker::handleReadyRead);
-    connect(&serial, &QSerialPort::errorOccurred, this, &SerialParserWorker::handleError);
-
-    holdingBuffer.reserve(HOLDING_BUFFER_SIZE);
-    messageBuffer.reserve(MESSAGE_BUFFER_SIZE);
+    holdingBuffer.reserve(1024);
+    messageBuffer.reserve(1024);
 }
 
 SerialParserWorker::~SerialParserWorker() {
     stop();
 }
 
-void SerialParserWorker::start(const QString &portName, int baudRate) {
-    serial.setPortName(portName);
-    serial.setBaudRate(baudRate);
-    serial.setDataBits(QSerialPort::Data8);
-    serial.setParity(QSerialPort::NoParity);
-    serial.setStopBits(QSerialPort::OneStop);
-    serial.setFlowControl(QSerialPort::NoFlowControl);
-
-    if (!serial.open(QIODevice::ReadWrite)) {
-        emit errorOccurred(serial.error(), serial.errorString());
+void SerialParserWorker::startReading(const QString &portName)
+{
+    if (portName.isEmpty()) {
+        emit errorOccurred(QSerialPort::UnknownError, "Port name is empty.");
         return;
     }
 
-    qDebug() << "Serial port opened successfully.";
-    serial.clear();
-    holdingBuffer.clear();
-    receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
+    // Check if the port is already open
+    if (serialPort.isOpen()) {
+        serialPort.close();  // Close it if already open
+        qDebug() << "Serial port closed as it was already open.";
+    }
+
+    // Now open the port
+    serialPort.setPortName(portName);
+    if (!serialPort.open(QIODevice::ReadWrite)) {
+        emit errorOccurred(serialPort.error(), serialPort.errorString());
+        return;
+    }
+
+    qDebug() << "Serial port opened on" << portName;
 }
 
+
 void SerialParserWorker::stop() {
-    if (serial.isOpen()) {
-        serial.close();
+    if (serialPort.isOpen()) {
+        serialPort.close();
         qDebug() << "Serial port closed.";
     }
 }
@@ -54,13 +56,13 @@ float SerialParserWorker::getLatestValue() {
 }
 
 void SerialParserWorker::handleReadyRead() {
-    QByteArray data = serial.readAll();
+    QByteArray data = serialPort.readAll();
     for (char byte : data) {
-        if (holdingBuffer.size() < HOLDING_BUFFER_SIZE) {
+        if (holdingBuffer.size() < 1024) {
             holdingBuffer.append(byte);
         } else {
             holdingBuffer[holdingBufferIndex] = byte;
-            holdingBufferIndex = (holdingBufferIndex + 1) % HOLDING_BUFFER_SIZE;
+            holdingBufferIndex = (holdingBufferIndex + 1) % 1024;
         }
         checkAndProcessData();
     }
@@ -80,8 +82,8 @@ void SerialParserWorker::checkAndProcessData() {
             holdingBuffer.remove(0, 1);
         } else if (receiveDataPacketState == ReceiveDataPacketStatus::RECEIVING_DATA) {
             messageBuffer.append(byte);
-            if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
-                if (messageBuffer.last() == endMarker) {
+            if (messageBuffer.size() == 7) {
+                if (!messageBuffer.isEmpty() && messageBuffer.back() == endMarker) {
                     processPacket();
                 } else {
                     qWarning() << "Invalid packet (no end marker).";
@@ -95,7 +97,7 @@ void SerialParserWorker::checkAndProcessData() {
 }
 
 void SerialParserWorker::processPacket() {
-    if (messageBuffer.size() != MESSAGE_BUFFER_SIZE) return;
+    if (messageBuffer.size() != 7) return;
 
     float fVal;
     uint8_t reorder[4] = {
@@ -123,6 +125,6 @@ void SerialParserWorker::processPacket() {
 
 void SerialParserWorker::handleError(QSerialPort::SerialPortError error) {
     if (error != QSerialPort::NoError) {
-        emit errorOccurred(error, serial.errorString());
+        emit errorOccurred(error, serialPort.errorString());
     }
 }

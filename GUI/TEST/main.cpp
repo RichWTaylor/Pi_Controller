@@ -1,32 +1,29 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QThread>
+
 #include "SerialParserWorker.h"
+#include "SerialParserHandler.h"
+#include "umsdk_wrapper.h" // Include your umsdk class header
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    // Create and move SerialParserWorker to its own thread
-    QThread *workerThread = new QThread;
-    SerialParserWorker *serialWorker = new SerialParserWorker();
-    serialWorker->moveToThread(workerThread);
+    Umsdk_wrapper umsdk;
 
-    // Clean up thread and worker on exit
-    QObject::connect(workerThread, &QThread::finished, serialWorker, &QObject::deleteLater);
-    QObject::connect(&app, &QCoreApplication::aboutToQuit, workerThread, &QThread::quit);
-    QObject::connect(workerThread, &QThread::finished, workerThread, &QObject::deleteLater);
+    // Create the SerialParserHandler to manage SerialParserWorker
+    SerialParserHandler *serialParserHandler = new SerialParserHandler();
 
-    // Start the serial thread
-    workerThread->start();
-
-    // Optional: start serial communication right away
-    QMetaObject::invokeMethod(serialWorker, "startReading", Qt::QueuedConnection,
-                              Q_ARG(QString, "ttyAMA0")); // or any port name you use
+    // Start serial communication after QML is loaded
+    serialParserHandler->startReading("/dev/serial0");  // Specify the port here
 
     // Set up QML engine
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("serialWorker", serialWorker);
+    engine.rootContext()->setContextProperty("umsdk", &umsdk);
+    engine.rootContext()->setContextProperty("serialParserHandler", serialParserHandler);
+
     const QUrl url(QStringLiteral("qrc:/main.qml"));
 
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
@@ -36,6 +33,7 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
 
     engine.load(url);
+
 
     return app.exec();
 }
