@@ -1,4 +1,4 @@
-#include "SerialProtocol.h".h"
+#include "SerialProtocol.h"
 #include "SerialParserWorker.h"
 #include <QDebug>
 #include <QtCore/qmath.h>
@@ -38,12 +38,12 @@ void SerialParserWorker::startReading(const QString &portName)
     // Now open the port
     serialPort.setPortName(portName);
 
-    // Serial port configuration (you were missing this part in your code)
-    serialPort.setBaudRate(QSerialPort::Baud115200);     // Set the baud rate
-    serialPort.setDataBits(QSerialPort::Data8);          // Set data bits (8 bits per byte)
-    serialPort.setStopBits(QSerialPort::OneStop);        // Set 1 stop bit
-    serialPort.setParity(QSerialPort::NoParity);         // No parity bit
-    serialPort.setFlowControl(QSerialPort::NoFlowControl); // Disable flow control
+    // Set serial parameters using values from SerialProtocol.h
+    serialPort.setBaudRate(SERIAL_BAUD_RATE);
+    serialPort.setDataBits(QSerialPort::DataBits(SERIAL_DATA_BITS));
+    serialPort.setStopBits(QSerialPort::StopBits(SERIAL_STOP_BITS));
+    serialPort.setParity(QSerialPort::Parity(SERIAL_PARITY_NONE));
+    serialPort.setFlowControl(QSerialPort::NoFlowControl);
 
     if (!serialPort.open(QIODevice::ReadWrite)) {
         emit errorOccurred(serialPort.error(), serialPort.errorString());
