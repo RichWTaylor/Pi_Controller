@@ -97,6 +97,7 @@ void SerialWorker::checkAndProcessData()
             if (byte == startMarker) {
                 messageBuffer.clear();  // Clear message buffer
                 messageBuffer.append(byte);  // Add start marker
+                holdingBuffer.remove(0,1);
                 receiveDataPacketState = ReceiveDataPacketStatus::RECEIVING_DATA;
                 qDebug() << "Start marker observed, transitioning to RECEIVING_DATA state.";
             } else {
