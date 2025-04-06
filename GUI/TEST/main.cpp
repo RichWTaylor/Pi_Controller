@@ -6,7 +6,7 @@
 #include "SerialParserWorker.h"
 #include "SerialParserHandler.h"
 #include "umsdk_wrapper.h" // Include your umsdk class header
-#include "pidController.h" // Include the pidController class header
+#include "PidController.h" // Include the pidController class header
 
 int main(int argc, char *argv[])
 {

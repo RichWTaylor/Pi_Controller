@@ -1,4 +1,4 @@
-#include "pidController.h"
+#include "PidController.h"
 #include <QDebug>
 
 pidController::pidController(QObject *parent)
