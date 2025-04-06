@@ -89,41 +89,52 @@ void SerialWorker::checkAndProcessData()
     while (!holdingBuffer.isEmpty()) {
         uint8_t byte = static_cast<uint8_t>(holdingBuffer[0]);
 
+        // Debugging output to track the byte and buffer state
+        qDebug() << "Processing byte: " << byte << " Holding buffer size: " << holdingBuffer.size();
+
         if (receiveDataPacketState == ReceiveDataPacketStatus::IDLE) {
-            // Look for the start marker
+            // Check for start marker
             if (byte == startMarker) {
-                messageBuffer.clear();  // Clear the message buffer before starting a new packet
-                messageBuffer.append(byte);  // Add the start marker
+                messageBuffer.clear();  // Clear message buffer
+                messageBuffer.append(byte);  // Add start marker
                 receiveDataPacketState = ReceiveDataPacketStatus::RECEIVING_DATA;
                 qDebug() << "Start marker observed, transitioning to RECEIVING_DATA state.";
             } else {
-                holdingBuffer.remove(0, 1);  // Discard byte if it's not the start marker in IDLE state
+                holdingBuffer.remove(0, 1);  // Discard byte if not start marker
                 qDebug() << "Discard byte: " << byte;
             }
         } else if (receiveDataPacketState == ReceiveDataPacketStatus::RECEIVING_DATA) {
-            messageBuffer.append(byte);  // Append byte to message buffer
+            // Append byte to message buffer
+            messageBuffer.append(byte);
             qDebug() << "Append byte to messageBuffer: " << byte;
 
-            // Check if we've received enough bytes for the message
+            // Debug output to track the content of messageBuffer
+            qDebug() << "Message buffer content so far: " << messageBuffer.toHex();
+
+            // Check if we've received a full message
             if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
-                // Before removing the byte from the holding buffer, check if it's a valid end marker
-                if (messageBuffer.at(messageBuffer.size() - 1) == endMarker) {
-                    // Valid packet: Process the message
-                    processPacket();
+                // Debugging check: display the last byte
+                uint8_t lastByte = messageBuffer.at(messageBuffer.size() - 1);
+                qDebug() << "Last byte in messageBuffer: " << lastByte;
+
+                if (lastByte == endMarker) {
+                    qDebug() << "End marker found. Processing the packet.";
+                    processPacket();  // Process the packet if valid
                     messageBuffer.clear();  // Clear message buffer after processing
                     receiveDataPacketState = ReceiveDataPacketStatus::IDLE;  // Reset state
                 } else {
-                    qWarning() << "Invalid packet received, discarding message.";
-                    messageBuffer.clear();  // Clear the invalid message
+                    qWarning() << "Invalid packet received. Last byte was not end marker.";
+                    messageBuffer.clear();  // Clear invalid message buffer
                     receiveDataPacketState = ReceiveDataPacketStatus::IDLE;  // Reset state
                 }
             }
 
-            // Always remove the byte from the holding buffer after processing it
+            // Remove the byte from the holding buffer after processing
             holdingBuffer.remove(0, 1);
         }
     }
 }
+
 
 
 
