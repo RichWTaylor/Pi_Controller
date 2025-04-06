@@ -82,10 +82,6 @@ void SerialWorker::handleIncomingData()
         }
 
     }
-
-
-
-
 }
 
 void SerialWorker::checkAndProcessData()
@@ -103,9 +99,7 @@ void SerialWorker::checkAndProcessData()
                 qDebug() << "Start marker observed, transitioning to RECEIVING_DATA state.";
             } else {
                 holdingBuffer.remove(0, 1);  // Discard byte if not a start marker in IDLE state
-                qDebug() << "byte: ";
-                qDebug() << byte;
-                qDebug() << "discarded";
+                qDebug() << "Discard byte: " << byte;
             }
         } else if (receiveDataPacketState == ReceiveDataPacketStatus::RECEIVING_DATA) {
             messageBuffer.append(byte);
@@ -115,7 +109,7 @@ void SerialWorker::checkAndProcessData()
 
             if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
                 // Use 'at()' to access the last element of the QByteArray
-                qDebug() << "check end marker:";
+                qDebug() << "check if last messageBuffer byte is end marker:";
                 if (!messageBuffer.isEmpty() && messageBuffer.at(messageBuffer.size()-1) == endMarker) {
                     processPacket();  // Valid packet
                 } else {
