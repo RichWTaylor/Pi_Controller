@@ -5,9 +5,9 @@ LIBS += -L/home/labadmin/umsdk/build/bin/shared/ -lum
 QMAKE_RPATHDIR += /home/labadmin/umsdk/build/bin/shared/
 
 SOURCES += \
+    main.cpp \
     SerialParserHandler.cpp \
     umsdk_wrapper.cpp \
-    main.cpp \
     SerialParserWorker.cpp \
     PidController.cpp
 

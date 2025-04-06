@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
     pidController pidCtrl;
 
     // Connect the signal to the pidController slot
-    QObject::connect(&serialParserHandler, &SerialParserHandler::packetReceived,
+    QObject::connect(serialParserHandler, &SerialParserHandler::packetReceived,
         &pidCtrl, &pidController::onPacketReceived);
 
 
