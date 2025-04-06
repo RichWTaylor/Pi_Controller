@@ -8,12 +8,14 @@ SOURCES += \
     SerialParserHandler.cpp \
     umsdk_wrapper.cpp \
     main.cpp \
-    SerialParserWorker.cpp
+    SerialParserWorker.cpp \
+    PidController.cpp
 
 HEADERS += \
     SerialParserHandler.h \
     umsdk_wrapper.h \
     SerialParserWorker.h \
+    PidController.h \
     SerialProtocol.h  # Include shared protocol file
 
 RESOURCES += qml.qrc

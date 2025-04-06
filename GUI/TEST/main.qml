@@ -1,54 +1,53 @@
-import QtQuick.Window 2.15
-import QtQuick.Controls 2.15
 import QtQuick 2.15
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
 
-Window {
-    width: 500
-    height: 480
+ApplicationWindow {
     visible: true
-    title: qsTr("Sensapex Controller v1.0")
+    width: 640
+    height: 480
+    title: "PID Controller with UMSDK Example"
 
-    property real receivedValue: 0.0  // Holds latest received value
+    ColumnLayout {
+        anchors.centerIn: parent
 
-    Connections {
-        target: serialParserHandler
-        function onPacketReceived(packet) {
-            receivedValue = packet;  // Update the receivedValue with the new packet value
+        Button {
+            text: "Connect to Device"
+            onClicked: {
+                pidController.connectToDevice()
+            }
         }
-    }
 
+        Button {
+            text: "Move Up"
+            onClicked: {
+                pidController.moveUp()  // Call moveUp method in pidController
+            }
+        }
 
-    Button {
-        text: "DOWN"
-        x: 200
-        y: 300
-        onClicked: umsdk.moveDown()
-    }
+        Button {
+            text: "Move Down"
+            onClicked: {
+                pidController.moveDown()  // Call moveDown method in pidController
+            }
+        }
 
-    Button {
-        text: "UP"
-        x: 200
-        y: 100
-        onClicked: umsdk.moveUp()
-    }
+        Button {
+            text: "Move Forward"
+            onClicked: {
+                pidController.moveFwd()  // Call moveFwd method in pidController
+            }
+        }
 
-    Button {
-        text: "BACK"
-        x: 50
-        y: 200
-        onClicked: umsdk.moveBack()
-    }
+        Button {
+            text: "Move Back"
+            onClicked: {
+                pidController.moveBack()  // Call moveBack method in pidController
+            }
+        }
 
-    Button {
-        text: "FWD"
-        x: 350
-        y: 200
-        onClicked: umsdk.moveFwd()
-    }
-
-    Text {
-        text: "Received Value: " + receivedValue
-        x: 200
-        y: 250
+        Text {
+            text: "Current PID Value: " + pidController.getPIDValue()  // Access the PID value from pidController
+        }
     }
 }

@@ -6,23 +6,32 @@
 #include "SerialParserWorker.h"
 #include "SerialParserHandler.h"
 #include "umsdk_wrapper.h" // Include your umsdk class header
+#include "pidController.h" // Include the pidController class header
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
-    Umsdk_wrapper umsdk;
+    // Create the umsdk wrapper to move stage
+    //Umsdk_wrapper umsdk;
 
     // Create the SerialParserHandler to manage SerialParserWorker
     SerialParserHandler *serialParserHandler = new SerialParserHandler();
-
-    // Start serial communication after QML is loaded
     serialParserHandler->setPortName("/dev/serial0");  // Set the name only
+
+    // PID Controller
+    pidController pidCtrl;
+
+    // Connect the signal to the pidController slot
+    QObject::connect(serialParserHandler, &SerialParserHandler::packetReceived, &pidCtrl, &pidController::onPacketReceived);
 
     // Set up QML engine
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("umsdk", &umsdk);
-    engine.rootContext()->setContextProperty("serialParserHandler", serialParserHandler);
+
+    // Expose instances to QML
+    //engine.rootContext()->setContextProperty("umsdk", &umsdk);  // Expose umsdk to QML
+    engine.rootContext()->setContextProperty("serialParserHandler", serialParserHandler);  // Expose serialParserHandler to QML
+    engine.rootContext()->setContextProperty("pidController", &pidCtrl);  // Expose pidCtrl to QML
 
     const QUrl url(QStringLiteral("qrc:/main.qml"));
 
@@ -33,7 +42,6 @@ int main(int argc, char *argv[])
     }, Qt::QueuedConnection);
 
     engine.load(url);
-
 
     return app.exec();
 }
