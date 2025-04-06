@@ -41,7 +41,7 @@ void SerialParserWorker::startReading(const QString &portName)
         return;
     }
 
-    qDebug() << "Serial port opened on" << portName;
+    qDebug() << "[SerialParserWorker] Serial port opened on" << portName;
 
     // Connect the `readyRead` signal to `handleReadyRead` method
     connect(&serialPort, &QSerialPort::readyRead, this, &SerialParserWorker::handleReadyRead);
@@ -61,29 +61,42 @@ float SerialParserWorker::getLatestValue() {
 }
 
 void SerialParserWorker::handleReadyRead() {
+
+    qDebug() << "handleReadyRead called";
+
     QByteArray data = serialPort.readAll();
+
+    qDebug() << "checkAndProcessData called";
+
     for (char byte : data) {
         if (holdingBuffer.size() < 1024) {
             holdingBuffer.append(byte);
+            qDebug() << "append called";
         } else {
             holdingBuffer[holdingBufferIndex] = byte;
             holdingBufferIndex = (holdingBufferIndex + 1) % 1024;
+            qDebug() << "overflow";
         }
         checkAndProcessData();
     }
 }
 
 void SerialParserWorker::checkAndProcessData() {
+
+     qDebug() << "checkAndProcessData called";
+
     while (!holdingBuffer.isEmpty()) {
         uint8_t byte = static_cast<uint8_t>(holdingBuffer[0]);
 
         if (receiveDataPacketState == ReceiveDataPacketStatus::IDLE) {
+            qDebug() << "-> IDLE";
             if (byte == startMarker) {
                 messageBuffer.clear();
                 messageBuffer.append(byte);
                 receiveDataPacketState = ReceiveDataPacketStatus::RECEIVING_DATA;
-                qDebug() << "Start marker detected.";
+                qDebug() << "!Start marker detected.";
             }
+            qDebug() << "discard" << byte;
             holdingBuffer.remove(0, 1);
         } else if (receiveDataPacketState == ReceiveDataPacketStatus::RECEIVING_DATA) {
             messageBuffer.append(byte);
