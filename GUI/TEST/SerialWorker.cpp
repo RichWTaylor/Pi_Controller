@@ -105,20 +105,22 @@ void SerialWorker::checkAndProcessData()
             messageBuffer.append(byte);
             qDebug() << "append byte to messageBuffer: ";
             qDebug() << byte;
-            holdingBuffer.remove(0, 1);  // Remove processed byte
 
+            // Process and remove byte after appending to messageBuffer
+            holdingBuffer.remove(0, 1);
+
+            // Check if the messageBuffer is full
             if (messageBuffer.size() == MESSAGE_BUFFER_SIZE) {
-                // Use 'at()' to access the last element of the QByteArray
-                qDebug() << "check if last messageBuffer byte is end marker:";
-                if (!messageBuffer.isEmpty() && messageBuffer.at(messageBuffer.size()-1) == endMarker) {
+                // Check if the last byte is the end marker
+                if (messageBuffer.at(messageBuffer.size() - 1) == endMarker) {
                     processPacket();  // Valid packet
+                    messageBuffer.clear();  // Clear message buffer for next packet
+                    receiveDataPacketState = ReceiveDataPacketStatus::IDLE; // Reset to IDLE state
                 } else {
                     qWarning() << "Invalid packet received, discarding message.";
-                    messageBuffer.clear();
+                    messageBuffer.clear();  // Clear message buffer if packet is invalid
+                    receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
                 }
-
-                // Reset the state to IDLE after processing
-                receiveDataPacketState = ReceiveDataPacketStatus::IDLE;
             }
         }
     }
