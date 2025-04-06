@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     SerialParserHandler *serialParserHandler = new SerialParserHandler();
 
     // Start serial communication after QML is loaded
-    serialParserHandler->startReading("/dev/serial0");  // Specify the port here
+    serialParserHandler->setPortName("/dev/serial0");  // Set the name only
 
     // Set up QML engine
     QQmlApplicationEngine engine;
