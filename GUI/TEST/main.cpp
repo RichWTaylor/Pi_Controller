@@ -1,57 +1,41 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
-#include "umsdk_wrapper.h"
-#include "SerialDataPackets.h"
-#include <QMetaType>
-#include <QDebug>
+#include "SerialParserWorker.h"
 
-int main(int argc, char *argv[]) {
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
-#endif
-    qDebug() << "Starting application...";
-
-    // Register QSerialPort::SerialPortError type
-    qRegisterMetaType<QSerialPort::SerialPortError>("QSerialPort::SerialPortError");
-
+int main(int argc, char *argv[])
+{
     QGuiApplication app(argc, argv);
 
-    Umsdk_wrapper umsdk;
-    SerialDataPackets serialPackets;  // This will now manage the worker thread
+    // Create and move SerialParserWorker to its own thread
+    QThread *workerThread = new QThread;
+    SerialParserWorker *serialWorker = new SerialParserWorker();
+    serialWorker->moveToThread(workerThread);
 
+    // Clean up thread and worker on exit
+    QObject::connect(workerThread, &QThread::finished, serialWorker, &QObject::deleteLater);
+    QObject::connect(&app, &QCoreApplication::aboutToQuit, workerThread, &QThread::quit);
+    QObject::connect(workerThread, &QThread::finished, workerThread, &QObject::deleteLater);
+
+    // Start the serial thread
+    workerThread->start();
+
+    // Optional: start serial communication right away
+    QMetaObject::invokeMethod(serialWorker, "startReading", Qt::QueuedConnection,
+                              Q_ARG(QString, "ttyAMA0")); // or any port name you use
+
+    // Set up QML engine
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("umsdk", &umsdk);
-    engine.rootContext()->setContextProperty("serialPackets", &serialPackets); // Now, serialPackets is available in QML.
-
-    qDebug() << "Initializing SerialDataPackets...";
-
-    // Start serial communication
-    serialPackets.start("/dev/serial0");  // Start the serial communication in the worker thread
-
-    // Connect received data to QML (QML qDebug)
-    QObject::connect(&serialPackets, &SerialDataPackets::packetReceived, [](float value) {
-        qDebug() << "(main.cpp) Received packet value:" << value;
-    });
-
+    engine.rootContext()->setContextProperty("serialWorker", serialWorker);
     const QUrl url(QStringLiteral("qrc:/main.qml"));
+
     QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
                      &app, [url](QObject *obj, const QUrl &objUrl) {
-        if (!obj && url == objUrl) {
-            qCritical() << "Failed to load QML.";
+        if (!obj && url == objUrl)
             QCoreApplication::exit(-1);
-        }
     }, Qt::QueuedConnection);
 
     engine.load(url);
-
-    QObject::connect(&engine, &QQmlApplicationEngine::warnings,
-                     [](const QList<QQmlError> &warnings) {
-        for (const auto &warning : warnings)
-            qWarning() << "QML Warning:" << warning.toString();
-    });
-
-    qDebug() << "Application initialized successfully.";
 
     return app.exec();
 }
