@@ -23,7 +23,9 @@ int main(int argc, char *argv[])
     pidController pidCtrl;
 
     // Connect the signal to the pidController slot
-    QObject::connect(serialParserHandler, &SerialParserHandler::packetReceived, &pidCtrl, &pidController::onPacketReceived);
+    QObject::connect(&serialParserHandler, &SerialParserHandler::packetReceived,
+        &pidCtrl, &pidController::onPacketReceived);
+
 
     // Set up QML engine
     QQmlApplicationEngine engine;
