@@ -1,3 +1,4 @@
+#include "SerialProtocol.h".h"
 #include "SerialParserWorker.h"
 #include <QDebug>
 #include <QtCore/qmath.h>
@@ -8,11 +9,11 @@ SerialParserWorker::SerialParserWorker(QObject *parent)
       holdingBufferIndex(0),
       latestValue(0.0f),
       receiveDataPacketState(ReceiveDataPacketStatus::IDLE),
-      startMarker('<'),
-      endMarker('>')
+      startMarker(START_MARKER),
+      endMarker(END_MARKER)
 {
-    holdingBuffer.reserve(1024);
-    messageBuffer.reserve(1024);
+    holdingBuffer.reserve(HOLDING_BUFFER_SIZE);
+    messageBuffer.reserve(MESSAGE_SIZE);
 }
 
 SerialParserWorker::~SerialParserWorker() {
