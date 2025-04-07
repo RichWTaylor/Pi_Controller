@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.15
 ApplicationWindow {
 
     Connections {
-        target: serialParserWorker
+        target: serialParserHandler
         onPacketReceived: (value) => {
             serialValueText.text = "Latest Serial Value: " + value.toFixed(3)
         }
