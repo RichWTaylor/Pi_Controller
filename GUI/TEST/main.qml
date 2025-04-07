@@ -30,7 +30,7 @@ ApplicationWindow {
 
                 Text {
                     id: serialValueText
-                    text: "" 
+                    text: "..." 
                     font.pixelSize: 16
                 }
             }
