@@ -12,7 +12,7 @@ ApplicationWindow {
     }
 
     visible: true
-    width: 640
+    width: 1920
     height: 1080
     title: "PID Controller with UMSDK Example"
 
