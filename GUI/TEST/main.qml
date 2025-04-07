@@ -3,6 +3,14 @@ import QtQuick.Controls 2.15
 import QtQuick.Layouts 1.15
 
 ApplicationWindow {
+
+    Connections {
+        target: serialParserWorker
+        onPacketReceived: (value) => {
+            serialValueText.text = "Latest Serial Value: " + value.toFixed(3)
+        }
+    }
+
     visible: true
     width: 640
     height: 1080
@@ -22,7 +30,7 @@ ApplicationWindow {
 
                 Text {
                     id: serialValueText
-                    text: "Latest Serial Value: N/A"
+                    text: "" 
                     font.pixelSize: 16
                 }
             }
@@ -44,8 +52,7 @@ ApplicationWindow {
                 }
             }
         }
-
-        // ... [the rest of your layout remains unchanged] ...
+      
 
         GroupBox {
             title: "Data Monitor"
@@ -80,19 +87,4 @@ ApplicationWindow {
         }
     }
 
-    Timer {
-        interval: 100
-        running: true
-        repeat: true
-        onTriggered: {
-            // This forces the Text element showing the current value to update
-        }
-    }
-
-    Connections {
-        target: serialParserWorker
-        onPacketReceived: (value) => {
-            serialValueText.text = "Latest Serial Value: " + value.toFixed(3)
-        }
-    }
 }
