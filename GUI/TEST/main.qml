@@ -5,7 +5,7 @@ import QtQuick.Layouts 1.15
 ApplicationWindow {
     visible: true
     width: 640
-    height: 480
+    height: 1080
     title: "PID Controller with UMSDK Example"
 
     ColumnLayout {
