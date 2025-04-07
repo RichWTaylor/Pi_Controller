@@ -14,6 +14,10 @@ SerialParserWorker::SerialParserWorker(QObject *parent)
 {
     holdingBuffer.reserve(HOLDING_BUFFER_SIZE);
     messageBuffer.reserve(MESSAGE_SIZE);
+    
+    // Connect error signal once during construction
+    connect(&serialPort, static_cast<void(QSerialPort::*)(QSerialPort::SerialPortError)>(&QSerialPort::error),
+            this, &SerialParserWorker::handleError);
 }
 
 SerialParserWorker::~SerialParserWorker() {
@@ -22,8 +26,6 @@ SerialParserWorker::~SerialParserWorker() {
 
 void SerialParserWorker::startReading(const QString &portName)
 {
-    connect(&serialPort, &QSerialPort::readyRead, this, &SerialParserWorker::handleReadyRead);
-
     if (portName.isEmpty()) {
         emit errorOccurred(QSerialPort::UnknownError, "Port name is empty.");
         return;
@@ -55,8 +57,6 @@ void SerialParserWorker::startReading(const QString &portName)
     // Connect the `readyRead` signal to `handleReadyRead` method
     connect(&serialPort, &QSerialPort::readyRead, this, &SerialParserWorker::handleReadyRead);
 }
-
-
 
 void SerialParserWorker::stop() {
     if (serialPort.isOpen()) {

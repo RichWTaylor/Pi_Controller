@@ -4,14 +4,33 @@
 pidController::pidController(QObject *parent)
     : QObject(parent)
 {
-    // Initialize Umsdk_wrapper instance (it’s already initialized by its constructor)
+    // Initialize Umsdk_wrapper instance (it's already initialized by its constructor)
 }
 
-void onPacketReceived(float value) {
-    // Dummy processing: just print the received value for now
+void pidController::onPacketReceived(float value) {
     qDebug() << "Packet received with value:" << value;
-
-    // Here you can implement actual PID control logic or pass the value to other parts of your controller
+    
+    lastValue = value; // Always update the last value
+    
+    if (pidRunning) {
+        // Calculate PID output
+        double error = setpoint - value;
+        integral += error;
+        double derivative = error - lastError;
+        
+        double output = kp * error + ki * integral + kd * derivative;
+        
+        // Apply the output to control the device
+        // For example, if positive output means move up:
+        if (output > 0.5) {
+            umsdk.moveUp();
+        } else if (output < -0.5) {
+            umsdk.moveDown();
+        }
+        
+        lastError = error;
+        qDebug() << "PID calculation - Error:" << error << "Output:" << output;
+    }
 }
 
 void pidController::connectToDevice()
@@ -22,20 +41,35 @@ void pidController::connectToDevice()
 
 void pidController::startPIDControl()
 {
-    // Start PID control logic here
-    qDebug() << "PID Control started.";
+    integral = 0.0;
+    lastError = 0.0;
+    pidRunning = true;
+    qDebug() << "PID Control started with setpoint:" << setpoint;
 }
 
 void pidController::stopPIDControl()
 {
-    // Stop PID control logic here
+    pidRunning = false;
     qDebug() << "PID Control stopped.";
 }
 
 double pidController::getPIDValue()
 {
-    // Implement logic to fetch PID value
-    return 42.0;  // Placeholder value
+    return lastValue;  // Return the last measured value
+}
+
+void pidController::setSetpoint(double target)
+{
+    setpoint = target;
+    qDebug() << "PID setpoint set to:" << setpoint;
+}
+
+void pidController::setPIDGains(double p, double i, double d)
+{
+    kp = p;
+    ki = i;
+    kd = d;
+    qDebug() << "PID gains set to P:" << p << "I:" << i << "D:" << d;
 }
 
 void pidController::moveUp()
