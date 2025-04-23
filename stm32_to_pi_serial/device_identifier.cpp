@@ -16,6 +16,7 @@
 #include <chrono>
 #include <thread>
 #include <signal.h>
+#include <algorithm>  // Added for std::find
 
 // Structure to hold device information
 struct DeviceInfo {
