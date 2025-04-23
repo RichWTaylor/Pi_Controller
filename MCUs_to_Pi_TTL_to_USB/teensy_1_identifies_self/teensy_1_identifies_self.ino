@@ -22,7 +22,7 @@ void setup() {
       Serial.println(response);
 
       if (response == "ACK") {
-        Serial.println("Setup complete, proceeding to main loop");
+        Serial.println("!!!!! Setup complete, proceeding to main loop");
         setupComplete = true;
       }
     }
