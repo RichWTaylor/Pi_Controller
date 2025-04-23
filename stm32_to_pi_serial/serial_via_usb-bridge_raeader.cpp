@@ -44,8 +44,8 @@ int openSerialPort(const char* portName) {
     clearBuffer(fd);
 
     // Configure baud rate
-    cfsetispeed(&options, B115200);
-    cfsetospeed(&options, B115200);
+    cfsetispeed(&options, B9600);
+    cfsetospeed(&options, B9600);
 
     // Configure 8N1 (8 data bits, No parity, 1 stop bit)
     options.c_cflag &= ~PARENB;
@@ -73,8 +73,8 @@ Buffer buffer(BUFFER_SIZE, 0);
 int fd;
 size_t idx = 0;
 
-#define START_MARKER '<'
-#define END_MARKER '>'
+#define START_MARKER 0x3C
+#define END_MARKER 0x3E
 
 // Function to safely add a character to the buffer
 void addCharToBuffer(uint8_t data) {
