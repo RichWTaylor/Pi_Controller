@@ -27,6 +27,8 @@
 #define END_MARKER 0x3E
 #define MAX_DEVICES 2
 
+float 
+
 // Device information structure
 struct DeviceInfo {
     std::string path;
