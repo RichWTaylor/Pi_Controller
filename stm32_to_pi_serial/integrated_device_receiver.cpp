@@ -1,5 +1,5 @@
-g++// multi_device_receiver.cpp
-// Compile with: g++ -o multi_device_receiver multi_device_receiver.cpp -pthread
+// integrated_device_receiver.cpp
+// Compile with: g++ -o integrated_device_receiver integrated_device_receiver.cpp -pthread
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,9 +15,10 @@ g++// multi_device_receiver.cpp
 #include <algorithm>
 #include <chrono>
 #include <thread>
+#include <atomic>
 #include <mutex>
 #include <memory>
-#include <signal.h>  // Added for signal handling
+#include <signal.h>
 
 // Constants
 #define BUFFER_SIZE 256
@@ -34,6 +35,7 @@ struct DeviceInfo {
     pthread_t thread;
     bool running;
     bool connected;
+    std::chrono::steady_clock::time_point lastActivity;
     std::mutex mutex;  // For thread-safe access to non-atomic members
 
     DeviceInfo() : fd(-1), running(false), connected(false) {}
@@ -46,6 +48,7 @@ struct DeviceInfo {
 // Global variables
 std::map<std::string, std::unique_ptr<DeviceInfo>> devices;
 std::mutex device_mutex;
+bool g_running = true;
 
 // Function to open and configure a serial port
 int openSerialPort(const char* portName) {
@@ -93,42 +96,6 @@ int openSerialPort(const char* portName) {
     return fd;
 }
 
-// Function to identify a device by sending a query and checking response
-std::string identifyDevice(int fd) {
-    // Clear any pending data
-    tcflush(fd, TCIOFLUSH);
-
-    // Send identification request
-    const char* query = "IDENTIFY\n";
-    write(fd, query, strlen(query));
-
-    // Wait for response
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
-
-    char buffer[64] = {0};
-    int bytesRead = read(fd, buffer, sizeof(buffer) - 1);
-
-    if (bytesRead > 0) {
-        buffer[bytesRead] = '\0';
-
-        // Remove any newlines or carriage returns
-        char* newline = strchr(buffer, '\n');
-        if (newline) *newline = '\0';
-
-        newline = strchr(buffer, '\r');
-        if (newline) *newline = '\0';
-
-        printf("Device responded: '%s'\n", buffer);
-
-        // Check if response is one of our expected device types
-        if (strstr(buffer, "TEENSY1") || strstr(buffer, "TEENSY2")) {
-            return buffer;
-        }
-    }
-
-    return "";
-}
-
 // Function to find all TTY USB devices
 std::vector<std::string> findTtyUsbDevices() {
     std::vector<std::string> devices;
@@ -146,6 +113,39 @@ std::vector<std::string> findTtyUsbDevices() {
     }
 
     return devices;
+}
+
+// Function to check if a device is sending an identifier
+bool checkForIdentifier(int fd, std::string& deviceType) {
+    // Read data
+    char buffer[256] = {0};
+    int bytesRead = read(fd, buffer, sizeof(buffer) - 1);
+
+    if (bytesRead > 0) {
+        buffer[bytesRead] = '\0';
+
+        // Print raw data for debugging
+        printf("Received %d bytes: '", bytesRead);
+        for (int i = 0; i < bytesRead; i++) {
+            if (buffer[i] >= 32 && buffer[i] <= 126) {
+                printf("%c", buffer[i]);
+            } else {
+                printf("\\x%02X", (unsigned char)buffer[i]);
+            }
+        }
+        printf("'\n");
+
+        // Check for identifiers
+        if (strstr(buffer, "TEENSY1_ID")) {
+            deviceType = "TEENSY1";
+            return true;
+        } else if (strstr(buffer, "TEENSY2_ID")) {
+            deviceType = "TEENSY2";
+            return true;
+        }
+    }
+
+    return false;
 }
 
 // Function to process a received packet
@@ -181,7 +181,7 @@ void* deviceThread(void* arg) {
     delete (std::string*)arg;
 
     // Thread loop
-    while (1) {
+    while (g_running) {
         // Get device info safely
         DeviceInfo* device = nullptr;
         {
@@ -203,27 +203,51 @@ void* deviceThread(void* arg) {
 
         // Check if device is connected
         bool is_connected;
+        int fd;
         {
             std::lock_guard<std::mutex> lock(device->mutex);
             is_connected = device->connected;
+            fd = device->fd;
         }
 
-        if (!is_connected) {
+        if (!is_connected || fd == -1) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
 
-        // Read data
-        int fd;
+        // Check for device reset (sending identifier again)
         {
-            std::lock_guard<std::mutex> lock(device->mutex);
-            fd = device->fd;
+            std::string resetDeviceType;
+            if (checkForIdentifier(fd, resetDeviceType)) {
+                if (resetDeviceType == deviceType) {
+                    printf("[%s] Device reset detected, sending ACK\n", deviceType.c_str());
+
+                    // Send acknowledgment
+                    const char* ack = "ACK\n";
+                    write(fd, ack, strlen(ack));
+
+                    // Update last activity
+                    std::lock_guard<std::mutex> lock(device->mutex);
+                    device->lastActivity = std::chrono::steady_clock::now();
+                }
+
+                // Skip this iteration to avoid processing the identifier as data
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
+                continue;
+            }
         }
 
+        // Read data
         uint8_t buffer[BUFFER_SIZE];
         int bytesRead = read(fd, buffer, sizeof(buffer));
 
         if (bytesRead > 0) {
+            // Update activity timestamp
+            {
+                std::lock_guard<std::mutex> lock(device->mutex);
+                device->lastActivity = std::chrono::steady_clock::now();
+            }
+
             static uint8_t packet[PACKET_SIZE];
             static int packetIndex = 0;
             static bool inPacket = false;
@@ -274,16 +298,71 @@ void scanForDevices() {
 
     printf("Found %zu potential TTY devices\n", ttyDevices.size());
 
+    // First, check existing devices for resets
+    {
+        std::lock_guard<std::mutex> lock(device_mutex);
+        for (auto& pair : devices) {
+            DeviceInfo* device = pair.second.get();
+            std::lock_guard<std::mutex> dev_lock(device->mutex);
+
+            if (device->connected && device->fd != -1) {
+                std::string deviceType;
+                if (checkForIdentifier(device->fd, deviceType)) {
+                    // Device is sending identifier again - it probably reset
+                    if (deviceType == device->type) {
+                        printf("Device %s at %s has reset, sending ACK\n", 
+                               device->type.c_str(), device->path.c_str());
+
+                        // Send acknowledgment
+                        const char* ack = "ACK\n";
+                        write(device->fd, ack, strlen(ack));
+
+                        // Update last activity
+                        device->lastActivity = std::chrono::steady_clock::now();
+                    }
+                }
+            }
+        }
+    }
+
     // Try to identify each device
     for (const auto& ttyDevice : ttyDevices) {
+        // Check if this device is already connected
+        bool alreadyConnected = false;
+        {
+            std::lock_guard<std::mutex> lock(device_mutex);
+            for (auto& pair : devices) {
+                DeviceInfo* device = pair.second.get();
+                std::lock_guard<std::mutex> dev_lock(device->mutex);
+
+                if (device->connected && device->path == ttyDevice) {
+                    alreadyConnected = true;
+                    foundDevices.push_back(device->type);
+                    break;
+                }
+            }
+        }
+
+        if (alreadyConnected) {
+            continue;
+        }
+
         printf("Checking %s...\n", ttyDevice.c_str());
 
         int fd = openSerialPort(ttyDevice.c_str());
         if (fd != -1) {
-            std::string deviceType = identifyDevice(fd);
+            // Wait a bit for data to arrive
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-            if (!deviceType.empty()) {
-                printf("Identified %s as %s\n", ttyDevice.c_str(), deviceType.c_str());
+            // Check for auto-identification
+            std::string deviceType;
+            if (checkForIdentifier(fd, deviceType)) {
+                printf("Identified %s as %s (auto-ID)\n", ttyDevice.c_str(), deviceType.c_str());
+
+                // Send acknowledgment
+                const char* ack = "ACK\n";
+                write(fd, ack, strlen(ack));
+                printf("Sent ACK to %s\n", deviceType.c_str());
 
                 // Lock before modifying the devices map
                 std::lock_guard<std::mutex> lock(device_mutex);
@@ -307,6 +386,7 @@ void scanForDevices() {
                         device->path = ttyDevice;
                         device->fd = fd;
                         device->connected = true;
+                        device->lastActivity = std::chrono::steady_clock::now();
                         printf("%s reconnected at %s\n", deviceType.c_str(), ttyDevice.c_str());
                     }
                 }
@@ -318,6 +398,7 @@ void scanForDevices() {
                     device->fd = fd;
                     device->connected = true;
                     device->running = true;
+                    device->lastActivity = std::chrono::steady_clock::now();
 
                     // Start a thread for this device
                     std::string* threadArg = new std::string(deviceType);
@@ -332,7 +413,7 @@ void scanForDevices() {
                 foundDevices.push_back(deviceType);
             }
             else {
-                // Not one of our devices
+                // Not one of our devices or not sending auto-ID
                 close(fd);
             }
         }
@@ -356,9 +437,41 @@ void scanForDevices() {
     }
 }
 
+// Function to get a device file descriptor by type (for external use)
+int getDeviceFd(const std::string& deviceType) {
+    std::lock_guard<std::mutex> lock(device_mutex);
+
+    auto it = devices.find(deviceType);
+    if (it != devices.end()) {
+        std::lock_guard<std::mutex> dev_lock(it->second->mutex);
+        if (it->second->connected) {
+            return it->second->fd;
+        }
+    }
+
+    return -1;
+}
+
+// Function to get a device path by type (for external use)
+std::string getDevicePath(const std::string& deviceType) {
+    std::lock_guard<std::mutex> lock(device_mutex);
+
+    auto it = devices.find(deviceType);
+    if (it != devices.end()) {
+        std::lock_guard<std::mutex> dev_lock(it->second->mutex);
+        if (it->second->connected) {
+            return it->second->path;
+        }
+    }
+
+    return "";
+}
+
 // Signal handler for clean shutdown
 void signalHandler(int signum) {
     printf("Caught signal %d, cleaning up...\n", signum);
+
+    g_running = false;
 
     // Stop all device threads
     {
@@ -382,22 +495,51 @@ void signalHandler(int signum) {
     exit(signum);
 }
 
+// Background thread for device scanning
+void* scanThread(void* arg) {
+    while (g_running) {
+        scanForDevices();
+        std::this_thread::sleep_for(std::chrono::seconds(2));
+    }
+    return NULL;
+}
+
 // Main function
 int main() {
-    printf("Multi-device TTL-USB receiver starting...\n");
+    printf("Integrated device receiver starting...\n");
 
     // Set up signal handling
-    signal(SIGINT, signalHandler);   // Handle Ctrl+C
-    signal(SIGTERM, signalHandler);  // Handle termination signal
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
 
-    // Initial scan for devices
-    scanForDevices();
+    // Start background scanner thread
+    pthread_t scanner_thread;
+    pthread_create(&scanner_thread, NULL, scanThread, NULL);
 
-    // Main loop - periodically scan for new/disconnected devices
-    while (1) {
-        std::this_thread::sleep_for(std::chrono::seconds(5));
-        scanForDevices();
+    // Main loop - just wait for signals
+    while (g_running) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+
+        // Print device status
+        std::lock_guard<std::mutex> lock(device_mutex);
+        printf("Connected devices:\n");
+        for (auto& pair : devices) {
+            DeviceInfo* device = pair.second.get();
+            std::lock_guard<std::mutex> dev_lock(device->mutex);
+
+            if (device->connected) {
+                auto now = std::chrono::steady_clock::now();
+                auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(
+                    now - device->lastActivity).count();
+
+                printf("  %s: %s (fd=%d, last activity: %ld seconds ago)\n", 
+                       device->type.c_str(), device->path.c_str(), device->fd, elapsed);
+            }
+        }
     }
+
+    // Clean up
+    pthread_join(scanner_thread, NULL);
 
     return 0;
 }
