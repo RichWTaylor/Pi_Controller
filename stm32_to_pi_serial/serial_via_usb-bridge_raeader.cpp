@@ -17,6 +17,7 @@
 #include <thread>
 #include <atomic>
 #include <mutex>
+#include <memory>
 
 // Constants
 #define BUFFER_SIZE 256
@@ -31,14 +32,19 @@ struct DeviceInfo {
     std::string type;
     int fd;
     pthread_t thread;
-    std::atomic<bool> running;
-    std::atomic<bool> connected;
+    bool running;
+    bool connected;
+    std::mutex mutex;  // For thread-safe access to non-atomic members
 
     DeviceInfo() : fd(-1), running(false), connected(false) {}
+
+    // Non-copyable
+    DeviceInfo(const DeviceInfo&) = delete;
+    DeviceInfo& operator=(const DeviceInfo&) = delete;
 };
 
 // Global variables
-std::map<std::string, DeviceInfo> devices;
+std::map<std::string, std::unique_ptr<DeviceInfo>> devices;
 std::mutex device_mutex;
 
 // Function to open and configure a serial port
@@ -174,27 +180,54 @@ void* deviceThread(void* arg) {
     std::string deviceType = *(std::string*)arg;
     delete (std::string*)arg;
 
-    DeviceInfo& device = devices[deviceType];
-    device.running = true;
+    // Thread loop
+    while (1) {
+        // Get device info safely
+        DeviceInfo* device = nullptr;
+        {
+            std::lock_guard<std::mutex> lock(device_mutex);
+            auto it = devices.find(deviceType);
+            if (it == devices.end()) {
+                break;  // Device no longer exists
+            }
+            device = it->second.get();
+        }
 
-    printf("[%s] Thread started\n", deviceType.c_str());
+        // Check if thread should exit
+        {
+            std::lock_guard<std::mutex> lock(device->mutex);
+            if (!device->running) {
+                break;
+            }
+        }
 
-    uint8_t buffer[BUFFER_SIZE];
-    uint8_t packet[PACKET_SIZE];
-    int packetIndex = 0;
-    bool inPacket = false;
-
-    while (device.running) {
         // Check if device is connected
-        if (!device.connected) {
+        bool is_connected;
+        {
+            std::lock_guard<std::mutex> lock(device->mutex);
+            is_connected = device->connected;
+        }
+
+        if (!is_connected) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
             continue;
         }
 
         // Read data
-        int bytesRead = read(device.fd, buffer, sizeof(buffer));
+        int fd;
+        {
+            std::lock_guard<std::mutex> lock(device->mutex);
+            fd = device->fd;
+        }
+
+        uint8_t buffer[BUFFER_SIZE];
+        int bytesRead = read(fd, buffer, sizeof(buffer));
 
         if (bytesRead > 0) {
+            static uint8_t packet[PACKET_SIZE];
+            static int packetIndex = 0;
+            static bool inPacket = false;
+
             // Process each byte
             for (int i = 0; i < bytesRead; i++) {
                 uint8_t byte = buffer[i];
@@ -220,18 +253,14 @@ void* deviceThread(void* arg) {
         else if (bytesRead < 0) {
             // Error reading from device
             perror("Error reading from device");
-            device.connected = false;
-            close(device.fd);
-            device.fd = -1;
+
+            std::lock_guard<std::mutex> lock(device->mutex);
+            device->connected = false;
+            close(device->fd);
+            device->fd = -1;
         }
 
         std::this_thread::sleep_for(std::chrono::milliseconds(10));
-    }
-
-    // Clean up
-    if (device.fd != -1) {
-        close(device.fd);
-        device.fd = -1;
     }
 
     printf("[%s] Thread stopped\n", deviceType.c_str());
@@ -260,36 +289,42 @@ void scanForDevices() {
                 std::lock_guard<std::mutex> lock(device_mutex);
 
                 // Check if we already have this device type
-                if (devices.find(deviceType) != devices.end()) {
+                auto it = devices.find(deviceType);
+                if (it != devices.end()) {
                     // We already have this device type
-                    DeviceInfo& device = devices[deviceType];
+                    DeviceInfo* device = it->second.get();
+
+                    std::lock_guard<std::mutex> dev_lock(device->mutex);
 
                     // If it's already connected, skip
-                    if (device.connected) {
+                    if (device->connected) {
                         printf("%s is already connected at %s\n", 
-                               deviceType.c_str(), device.path.c_str());
+                               deviceType.c_str(), device->path.c_str());
                         close(fd);
                     }
                     else {
                         // Update the device info
-                        device.path = ttyDevice;
-                        device.fd = fd;
-                        device.connected = true;
+                        device->path = ttyDevice;
+                        device->fd = fd;
+                        device->connected = true;
                         printf("%s reconnected at %s\n", deviceType.c_str(), ttyDevice.c_str());
                     }
                 }
                 else {
                     // New device type
-                    DeviceInfo device;
-                    device.type = deviceType;
-                    device.path = ttyDevice;
-                    device.fd = fd;
-                    device.connected = true;
-                    devices[deviceType] = device;
+                    auto device = std::make_unique<DeviceInfo>();
+                    device->type = deviceType;
+                    device->path = ttyDevice;
+                    device->fd = fd;
+                    device->connected = true;
+                    device->running = true;
 
                     // Start a thread for this device
                     std::string* threadArg = new std::string(deviceType);
-                    pthread_create(&device.thread, NULL, deviceThread, threadArg);
+                    pthread_create(&device->thread, NULL, deviceThread, threadArg);
+
+                    // Store the device
+                    devices[deviceType] = std::move(device);
 
                     printf("Started thread for %s\n", deviceType.c_str());
                 }
@@ -307,21 +342,53 @@ void scanForDevices() {
     std::lock_guard<std::mutex> lock(device_mutex);
     for (auto& pair : devices) {
         const std::string& deviceType = pair.first;
-        DeviceInfo& device = pair.second;
+        DeviceInfo* device = pair.second.get();
 
-        if (device.connected && 
+        std::lock_guard<std::mutex> dev_lock(device->mutex);
+
+        if (device->connected && 
             std::find(foundDevices.begin(), foundDevices.end(), deviceType) == foundDevices.end()) {
             printf("%s disconnected\n", deviceType.c_str());
-            device.connected = false;
-            close(device.fd);
-            device.fd = -1;
+            device->connected = false;
+            close(device->fd);
+            device->fd = -1;
         }
     }
+}
+
+// Signal handler for clean shutdown
+void signalHandler(int signum) {
+    printf("Caught signal %d, cleaning up...\n", signum);
+
+    // Stop all device threads
+    {
+        std::lock_guard<std::mutex> lock(device_mutex);
+        for (auto& pair : devices) {
+            DeviceInfo* device = pair.second.get();
+
+            std::lock_guard<std::mutex> dev_lock(device->mutex);
+            device->running = false;
+
+            if (device->fd != -1) {
+                close(device->fd);
+                device->fd = -1;
+            }
+        }
+    }
+
+    // Wait a moment for threads to exit
+    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+
+    exit(signum);
 }
 
 // Main function
 int main() {
     printf("Multi-device TTL-USB receiver starting...\n");
+
+    // Set up signal handling
+    signal(SIGINT, signalHandler);
+    signal(SIGTERM, signalHandler);
 
     // Initial scan for devices
     scanForDevices();
@@ -330,17 +397,6 @@ int main() {
     while (1) {
         std::this_thread::sleep_for(std::chrono::seconds(5));
         scanForDevices();
-    }
-
-    // Clean up (this part is never reached in this example)
-    for (auto& pair : devices) {
-        DeviceInfo& device = pair.second;
-        device.running = false;
-        pthread_join(device.thread, NULL);
-
-        if (device.fd != -1) {
-            close(device.fd);
-        }
     }
 
     return 0;
