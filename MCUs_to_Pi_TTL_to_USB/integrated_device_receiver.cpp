@@ -142,6 +142,9 @@ bool checkForIdentifier(int fd, std::string& deviceType) {
         } else if (strstr(buffer, "TEENSY2_ID")) {
             deviceType = "TEENSY2";
             return true;
+        } else if (strstr(buffer, "STM32_ID")) {
+            deviceType = "STM32";
+            return true;
         }
     }
 
